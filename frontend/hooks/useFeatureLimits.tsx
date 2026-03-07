@@ -6,7 +6,7 @@
 'use client'
 
 import { useCallback, useState, useEffect } from 'react'
-import { FeatureType, PlanType, PLAN_LIMITS } from '@/lib/featureLimits'
+import { FeatureType, PlanType, PLAN_LIMITS } from '../lib/featureLimits'
 import { supabaseClient } from '@/lib/supabaseClient'
 
 export interface UpgradePromptInfo {
@@ -46,6 +46,7 @@ export const useFeatureLimits = (
         skillGapAnalysis: 0,
         saves: 0,
         downloads: 0,
+        aiSuggestions: 0,
     })
 
     // Fetch feature usage from backend on mount
@@ -81,6 +82,7 @@ export const useFeatureLimits = (
                         skillGapAnalysis: usage.skillGapAnalysis || 0,
                         saves: usage.saves || 0,
                         downloads: usage.downloads || 0,
+                        aiSuggestions: usage.aiSuggestions || 0,
                     })
                 } else if (response.status !== 401) {
                     // Only log non-401 errors (401 is expected when token expires/is invalid)
