@@ -1,0 +1,7 @@
+node_modules
+dist
+output.txt
+.env
+.git
+.vscode
+prisma/dev.db
