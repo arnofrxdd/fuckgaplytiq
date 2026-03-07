@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import { usePathname } from 'next/navigation'
-import { startModuleSession, stopModuleSession, getStoredSessionId, clearStoredSessionId } from '@/lib/moduleSessionClient'
+import { startModuleSession, stopModuleSession, getStoredSessionId, clearStoredSessionId } from '../lib/moduleSessionClient'
 
 // Keep simple mapping of pathname -> moduleName. Use top-level segment or 'home'.
 function computeModuleName(pathname: string | null) {
