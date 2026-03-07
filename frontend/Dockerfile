@@ -4,13 +4,13 @@ FROM node:18-slim AS builder
 WORKDIR /app
 
 # Copy package files
-COPY package*.json ./
+COPY frontend/package*.json ./
 
 # Install dependencies
 RUN npm install
 
 # Copy the rest of the application
-COPY . .
+COPY frontend .
 
 # Build the application
 # We need environment variables for the build if they are NEXT_PUBLIC

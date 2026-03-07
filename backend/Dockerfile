@@ -27,20 +27,24 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# Copy package files from backend
+COPY backend/package*.json ./backend/
 
-# Install dependencies
+# Install dependencies for backend
+WORKDIR /app/backend
 RUN npm install
 
 # Copy prisma schema and generate client
 COPY prisma ./prisma/
 RUN npx prisma generate
 
-# Copy the rest of the application
-COPY . .
+# Copy the backend code and shared code
+WORKDIR /app
+COPY backend ./backend
+COPY shared ./shared
 
 # Build the application
+WORKDIR /app/backend
 RUN npm run build
 
 # Expose the backend port
