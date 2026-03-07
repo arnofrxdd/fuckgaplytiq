@@ -29,12 +29,9 @@ export async function GET(request: Request) {
         )
         const { error } = await supabase.auth.exchangeCodeForSession(code)
         if (!error) {
-            // next is likely already relative to the app origin, but we want to ensure /resumy is included
-            const redirectUrl = next.startsWith('/resumy') ? next : `/resumy${next}`
-            return NextResponse.redirect(`${origin}${redirectUrl}`)
+            return NextResponse.redirect(new URL('/resume-creator/', request.url))
         }
     }
 
-    // return the user to the creator page even if there is a minor glitch
-    return NextResponse.redirect(`${origin}/resumy/resume-creator`)
+    return NextResponse.redirect(new URL('/resume-creator/', request.url))
 }

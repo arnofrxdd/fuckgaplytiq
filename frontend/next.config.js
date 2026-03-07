@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   basePath: '/resumy',
+  trailingSlash: true,
   images: {
     remotePatterns: [
       {
