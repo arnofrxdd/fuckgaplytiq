@@ -14,7 +14,7 @@ export default function OnboardingLogin({ onLoginSuccess, onBack }) {
             const { error } = await supabaseClient.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(window.location.href)}`
+                    redirectTo: `${window.location.origin}/resumy/auth/callback?next=${encodeURIComponent(window.location.href)}`
                 }
             });
             if (error) throw error;
