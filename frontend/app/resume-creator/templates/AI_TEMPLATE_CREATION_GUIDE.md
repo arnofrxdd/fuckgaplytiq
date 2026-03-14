@@ -4,13 +4,79 @@ This guide outlines the most efficient way to add new, professional templates to
 
 ---
 
-## 🚀 Step 1: Register the Template
-Before generating code, you need a placeholder for your new template.
+## 🚀 Step 1: Register and Configure the Template
+Setting up the boilerplate ensures the system can find and render your new template.
 
-1.  **Create a Folder**: Navigate to `frontend/app/resume-creator/templates/`.
-2.  **Naming**: Create a new folder named after your template (e.g., `ModernSleek`).
-3.  **Create JSX**: Inside that folder, create a file named `TemplateName.jsx`.
-4.  **Register**: Open `TemplateRegistry.js` and add your new template to the list so the system recognizes it.
+### 1. Create the Folder Structure
+Navigate to `frontend/app/resume-creator/templates/`.
+- Create a new folder (e.g., `ModernSleek`).
+- Inside it, create `ModernSleek.jsx`. Start with a basic "Hello World" component or an empty shell.
+
+### 2. Register in `TemplateRegistry.js`
+This file handles the dynamic loading of the component.
+1. Use `dynamic` to import your component (prevents SSR issues):
+   ```javascript
+   const ModernSleek = dynamic(() => import("./ModernSleek/ModernSleek"), { ssr: false });
+   ```
+2. Add it to the `TEMPLATE_COMPONENTS` object:
+   ```javascript
+   const TEMPLATE_COMPONENTS = {
+       "modern-sleek": ModernSleek,
+       // ... existing templates
+   };
+   ```
+
+### 3. Configure in `TemplateManager.js`
+This file acts as the single source of truth for template metadata (sidebar layout, default colors, etc.).
+Add a new object to the `templatesConfig` array:
+```javascript
+{
+  id: "modern-sleek",
+  name: "Modern Sleek",
+  thumbnail: "/templates/placeholder.png",
+  description: "A clean, modern description...",
+  tags: ["1-Column", "Modern"],
+  defaultColor: "#1e293b",
+  defaultFont: "Inter",
+  recommendedColors: ["#1e293b", "#2563eb"],
+  theme: { background: "#ffffff", text: "#1e293b" },
+  layout: {
+    main: ["summary", "experience", "education", "skills", "custom"]
+    // if 2-column, use main: [...] and sidebar: [...]
+  },
+  defaults: { 
+    fontSize: 1, 
+    fontFamily: "Inter", 
+    sectionSpacing: 1, 
+    paragraphSpacing: 1, 
+    lineHeight: 1.5, 
+    pageMargin: 40 
+  },
+  useRootPadding: false
+}
+```
+
+#### What each field means:
+- **`id`**: Unique identifier. Must match the key used in `TemplateRegistry.js`.
+- **`name`**: The display name shown in the template picker.
+- **`thumbnail`**: Path to the preview image (e.g., `"/templates/your-template.png"`).
+- **`colors & fonts`**:
+    - **`defaultColor`**: The primary accent color used when the template first loads.
+    - **`defaultFont`**: The primary font family (e.g., `"Inter"` or `"Georgia"`).
+    - **`recommendedColors`**: A palette of 3-4 colors that look particularly good with this design.
+- **`theme`**:
+    - **`background`**: The page color (usually `#ffffff`).
+    - **`text`**: The main body text color (usually a dark gray or black).
+- **`layout`**: Defines the "slots" for your content:
+    - **1-Column**: Use `main: [...]`.
+    - **2-Column**: Use `main: [...]` and `sidebar: [...]` (or `left`/`right`).
+- **`defaults` (Initial Slider Positions)**:
+    - **`fontSize`**: Base size (default is `1`).
+    - **`lineHeight`**: Spacing between lines (usually `1.4` to `1.6`).
+    - **`sectionSpacing`**: Vertical gap between major sections.
+    - **`paragraphSpacing`**: Vertical gap between bullet points/entries.
+    - **`pageMargin`**: The white space around the edge of the page (usually `40`).
+- **`useRootPadding`**: If `true`, the system applies base padding to the entire container; if `false`, the template handles its own internal spacing.
 
 ---
 
