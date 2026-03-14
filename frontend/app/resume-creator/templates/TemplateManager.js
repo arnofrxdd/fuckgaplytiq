@@ -102,13 +102,13 @@ export const templatesConfig = [
     description: "A clean, modern professional template featuring a timeline career spine and a dedicated quadrant for key achievements.",
     tags: ["Modern", "Timeline", "Premium", "1-Column"],
     defaultColor: "#055052",
-    defaultFont: "'Inter', sans-serif",
+    defaultFont: "Outfit",
     recommendedColors: ["#055052", "#0d9488", "#0f766e", "#334155"],
     theme: { background: "#ffffff", text: "#1e293b" },
     layout: {
       main: ["summary", "experience", "education", "projects", "skills", "languages", "interests", "custom"],
     },
-    defaults: { fontSize: 0.95, fontFamily: "Inter", sectionSpacing: 1.2, paragraphSpacing: 1.1, lineHeight: 1.55, letterSpacing: 0, pageMargin: 40 },
+    defaults: { fontSize: 0.95, fontFamily: "Outfit", sectionSpacing: 1.2, paragraphSpacing: 1.1, lineHeight: 1.55, letterSpacing: 0, pageMargin: 40 },
     useRootPadding: false
   },
   /*
@@ -137,14 +137,14 @@ export const templatesConfig = [
     description: "A clean, modern layout featuring a full-width colored header and a high-contrast shaded sidebar for contact and skills.",
     tags: ["2-Column", "Modern", "Shaded", "Professional"],
     defaultColor: "#70b1e8",
-    defaultFont: "'Inter', sans-serif",
+    defaultFont: "Urbanist",
     recommendedColors: ["#70b1e8", "#3b82f6", "#1e40af", "#0f172a"],
     theme: { background: "#ffffff", text: "#334155" },
     layout: {
       main: ["experience", "education", "projects", "custom"],
       sidebar: ["websites", "skills", "languages", "certifications"]
     },
-    defaults: { fontSize: 0.95, fontFamily: "Inter", sectionSpacing: 1.1, paragraphSpacing: 1, lineHeight: 1.5, letterSpacing: 0, pageMargin: 40 },
+    defaults: { fontSize: 0.95, fontFamily: "Urbanist", sectionSpacing: 1.1, paragraphSpacing: 1, lineHeight: 1.5, letterSpacing: 0, pageMargin: 40 },
     useRootPadding: false
   },
 
@@ -155,14 +155,14 @@ export const templatesConfig = [
     description: "A high-contrast professional layout with a charcoal sidebar, large profile focus, and clean horizontal section dividers.",
     tags: ["2-Column", "Corporate", "Classic", "Professional"],
     defaultColor: "#3e3e3e",
-    defaultFont: "'Inter', sans-serif",
+    defaultFont: "Montserrat",
     recommendedColors: ["#3e3e3e", "#1e293b", "#27272a", "#09090b"],
     theme: { background: "#ffffff", text: "#334155", backgroundShade: "#d9e9f7" },
     layout: {
       sidebar: ["websites", "education", "languages", "certifications"],
       main: ["summary", "skills", "experience", "projects", "custom"]
     },
-    defaults: { fontSize: 0.95, fontFamily: "Inter", sectionSpacing: 1.1, paragraphSpacing: 1, lineHeight: 1.5, letterSpacing: 0, pageMargin: 40 },
+    defaults: { fontSize: 0.95, fontFamily: "Montserrat", sectionSpacing: 1.1, paragraphSpacing: 1, lineHeight: 1.5, letterSpacing: 0, pageMargin: 40 },
     useRootPadding: false
   },
   {
@@ -188,14 +188,14 @@ export const templatesConfig = [
     description: "A soft, creative 2-column layout featuring an organic blob header, thick pastel side borders, and a dashed vertical timeline spine.",
     tags: ["2-Column", "Creative", "Minimal", "Simple"],
     defaultColor: "#60a5fa",
-    defaultFont: "'Inter', sans-serif",
+    defaultFont: "Manrope",
     recommendedColors: ["#60a5fa", "#fbcfe8", "#34d399", "#f87171"],
     theme: { background: "#ffffff", text: "#1e293b", sidebarBackground: "#ffffff" },
     layout: {
       sidebar: ["contact", "websites", "summary", "skills"],
       main: ["experience", "education", "projects", "custom"]
     },
-    defaults: { fontSize: 0.95, fontFamily: "Inter", sectionSpacing: 1.2, paragraphSpacing: 1, lineHeight: 1.6, letterSpacing: 0, pageMargin: 40 },
+    defaults: { fontSize: 0.95, fontFamily: "Manrope", sectionSpacing: 1.2, paragraphSpacing: 1, lineHeight: 1.6, letterSpacing: 0, pageMargin: 40 },
     useRootPadding: false
   },
   {
@@ -361,14 +361,14 @@ export const templatesConfig = [
     description: "A bold, high-contrast layout with maroon panels and golden accents, featuring a dedicated side-bar for core competencies.",
     tags: ["High Contrast", "Premium", "Panel", "2-Column", "Creative"],
     defaultColor: "#80303d",
-    defaultFont: "'Inter', sans-serif",
+    defaultFont: "Fraunces",
     recommendedColors: ["#80303d", "#0F172A", "#1E293B"],
     theme: { background: "#ffffff", text: "#1e293b" },
     layout: {
       sidebar: ["contact", "education", "skills"],
       main: ["summary", "experience", "certifications", "projects", "custom"]
     },
-    defaults: { fontSize: 1, fontFamily: "Inter", sectionSpacing: 1.2, paragraphSpacing: 1, lineHeight: 1.6, letterSpacing: 0, pageMargin: 40 },
+    defaults: { fontSize: 1, fontFamily: "Fraunces", sectionSpacing: 1.2, paragraphSpacing: 1, lineHeight: 1.6, letterSpacing: 0, pageMargin: 40 },
     useRootPadding: false
   },
   /*
@@ -535,14 +535,14 @@ export const templatesConfig = [
     description: "A professional 2-column layout with a deep plum sidebar, serif typography, and clear section iconography.",
     tags: ["2-Column", "Corporate", "Serif", "Professional"],
     defaultColor: "#5a2d6e",
-    defaultFont: "Georgia, serif",
+    defaultFont: "Playfair Display",
     recommendedColors: ["#5a2d6e", "#4A154B", "#1e293b", "#2d2d2d"],
     theme: { background: "#ffffff", text: "#222222", sidebarBackground: "#5a2d6e", sidebarText: "#ffffff" },
     layout: {
       left: ['contact', 'skills', 'additionalSkills', 'strengths', 'languages', 'certifications', 'software', 'interests', 'websites'],
       right: ['summary', 'education', 'experience', 'projects', 'awards', 'volunteer', 'publications', 'custom', 'additionalInfo']
     },
-    defaults: { fontSize: 0.9, fontFamily: "Georgia", sectionSpacing: 1.1, paragraphSpacing: 1, lineHeight: 1.6, letterSpacing: 0, pageMargin: 40 },
+    defaults: { fontSize: 0.9, fontFamily: "Playfair Display", sectionSpacing: 1.1, paragraphSpacing: 1, lineHeight: 1.6, letterSpacing: 0, pageMargin: 40 },
     useRootPadding: false
   },
   {

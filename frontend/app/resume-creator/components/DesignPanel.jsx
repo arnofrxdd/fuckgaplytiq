@@ -1,11 +1,13 @@
 import React, { useRef, useState, useMemo } from 'react';
 import { RotateCcw, ChevronDown, Check, X, Palette, Type, Maximize, ArrowLeft, MoveVertical, AlignLeft, Layout as LayoutIcon, Sliders as SlidersIcon, Type as TypeIcon, Maximize2, MoveHorizontal, ALargeSmall, Pipette } from 'lucide-react';
 import { templatesConfig } from '../templates/TemplateManager';
+import { RESUME_FONTS } from '@/lib/fonts.config';
 
 export default function DesignPanel({ data, setData, settings, setSettings, templateId, onColorChange, onClose, isMobile, onSubTabChange }) {
     const colorInputRef = useRef(null);
     const [subTab, setSubTab] = useState('main');
     const [showCustomTuning, setShowCustomTuning] = useState(false);
+    const [showFontDropdown, setShowFontDropdown] = useState(false);
 
     const handleSubTabChange = (tab) => {
         setSubTab(tab);
@@ -33,32 +35,63 @@ export default function DesignPanel({ data, setData, settings, setSettings, temp
         colors = [activeColor, ...colors];
     }
 
-    const fonts = [
-        "Inter", "Roboto", "Open Sans", "Lato", "Montserrat",
-        "Merriweather", "Playfair Display", "Lora", "EB Garamond",
-        "Libre Baskerville", "Outfit", "Century Gothic", "Source Sans Pro",
-        "Josefin Sans", "Cinzel"
-    ];
+const fonts = RESUME_FONTS.map(f => f.name);
 
-    // --- RGB COLOR HELPERS ---
     const hexToRgb = (hex) => {
         const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
         return result ? {
             r: parseInt(result[1], 16),
             g: parseInt(result[2], 16),
             b: parseInt(result[3], 16)
-        } : { r: 124, g: 58, b: 237 }; // Fallback to primary purple
+        } : { r: 59, g: 130, b: 246 }; // Blue-500 fallback
     };
 
     const rgbToHex = (r, g, b) => {
-        return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+        const toHex = (n) => {
+            const hex = Math.max(0, Math.min(255, n)).toString(16);
+            return hex.length === 1 ? "0" + hex : hex;
+        };
+        return "#" + toHex(r) + toHex(g) + toHex(b);
+    };
+
+    const hexToHsl = (hex) => {
+        let { r, g, b } = hexToRgb(hex);
+        r /= 255; g /= 255; b /= 255;
+        const max = Math.max(r, g, b), min = Math.min(r, g, b);
+        let h, s, l = (max + min) / 2;
+        if (max === min) { h = s = 0; }
+        else {
+            const d = max - min;
+            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+            switch (max) {
+                case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                case g: h = (b - r) / d + 2; break;
+                case b: h = (r - g) / d + 4; break;
+            }
+            h /= 6;
+        }
+        return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
+    };
+
+    const hslToHex = (h, s, l) => {
+        s /= 100; l /= 100;
+        const k = n => (n + h / 30) % 12;
+        const a = s * Math.min(l, 1 - l);
+        const f = n => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+        return rgbToHex(Math.round(255 * f(0)), Math.round(255 * f(8)), Math.round(255 * f(4)));
     };
 
     const handleRgbChange = (channel, value) => {
+        const val = parseInt(value, 10) || 0;
         const rgb = hexToRgb(activeColor);
-        const newRgb = { ...rgb, [channel]: parseInt(value, 10) };
-        const newHex = rgbToHex(newRgb.r, newRgb.g, newRgb.b);
-        handleColorClick(newHex);
+        const newRgb = { ...rgb, [channel]: val };
+        handleColorClick(rgbToHex(newRgb.r, newRgb.g, newRgb.b));
+    };
+
+    const handleHueChange = (e) => {
+        const hue = parseInt(e.target.value, 10);
+        const { s, l } = hexToHsl(activeColor);
+        handleColorClick(hslToHex(hue, s || 70, l || 50));
     };
 
     const handleHexChange = (e) => {
@@ -70,6 +103,7 @@ export default function DesignPanel({ data, setData, settings, setSettings, temp
     };
 
     const rgbValues = useMemo(() => hexToRgb(activeColor), [activeColor]);
+    const hslValues = useMemo(() => hexToHsl(activeColor), [activeColor]);
 
     const handleColorClick = (color) => {
         if (onColorChange) onColorChange(color);
@@ -249,7 +283,7 @@ export default function DesignPanel({ data, setData, settings, setSettings, temp
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                         {subTab === 'color' && (
-                            <div style={{ padding: '16px 20px 24px' }}>
+                            <div style={{ padding: '16px 20px 24px', maxHeight: '70vh', overflowY: 'auto', scrollbarWidth: 'none' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                         <button onClick={() => handleSubTabChange('main')} style={{ background: 'none', border: 'none', padding: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#7c3aed' }}>
@@ -407,8 +441,8 @@ export default function DesignPanel({ data, setData, settings, setSettings, temp
                         )}
 
                         {subTab === 'font' && (
-                            <div style={{ padding: '12px 20px' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                            <div style={{ padding: '12px 20px', display: 'flex', flexDirection: 'column', maxHeight: '75vh', overflowY: 'auto', scrollbarWidth: 'none' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                         <button onClick={() => handleSubTabChange('main')} style={{ background: 'none', border: 'none', padding: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#7c3aed' }}>
                                             <ArrowLeft size={18} />
@@ -417,21 +451,96 @@ export default function DesignPanel({ data, setData, settings, setSettings, temp
                                     </div>
                                     <X size={16} color="#94a3b8" onClick={onClose} style={{ cursor: 'pointer' }} />
                                 </div>
-                                <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'none' }}>
-                                    {fonts.map(f => (
-                                        <button
-                                            key={f}
-                                            onClick={() => updateSetting('fontFamily', f)}
-                                            style={{
-                                                padding: '8px 14px', whiteSpace: 'nowrap', background: settings.fontFamily === f ? '#f5f3ff' : '#ffffff',
-                                                border: `2px solid ${settings.fontFamily === f ? '#7c3aed' : '#f1f5f9'}`, borderRadius: '6px',
-                                                fontFamily: f, fontSize: '13px', color: '#0f172a'
-                                            }}
-                                        >
-                                            {f}
-                                        </button>
-                                    ))}
-                                </div>
+                                
+                                <button 
+                                    onClick={() => setShowFontDropdown(!showFontDropdown)}
+                                    style={{
+                                        width: '100%',
+                                        padding: '14px 16px',
+                                        background: '#f8fafc',
+                                        border: `2px solid ${showFontDropdown ? '#7c3aed' : '#e2e8f0'}`,
+                                        borderRadius: '12px',
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center',
+                                        marginBottom: '12px',
+                                        transition: 'all 0.2s'
+                                    }}
+                                >
+                                    <span style={{ 
+                                        fontFamily: `var(${RESUME_FONTS.find(f => f.name === settings.fontFamily)?.variable || '--font-inter'})`,
+                                        fontSize: '16px',
+                                        fontWeight: 600,
+                                        color: '#0f172a'
+                                    }}>
+                                        {settings.fontFamily}
+                                    </span>
+                                    <ChevronDown 
+                                        size={18} 
+                                        style={{ 
+                                            transform: showFontDropdown ? 'rotate(180deg)' : 'rotate(0)', 
+                                            transition: 'transform 0.2s', 
+                                            color: '#7c3aed' 
+                                        }} 
+                                    />
+                                </button>
+
+                                {showFontDropdown && (
+                                    <div style={{ 
+                                        display: 'flex', 
+                                        flexDirection: 'column', 
+                                        gap: '20px', 
+                                        maxHeight: '45vh', 
+                                        overflowY: 'auto', 
+                                        padding: '4px',
+                                        background: '#ffffff',
+                                        borderRadius: '12px',
+                                        border: '1px solid #f1f5f9',
+                                        scrollbarWidth: 'none',
+                                        animation: 'fadeIn 0.2s ease-out'
+                                    }}>
+                                        {[
+                                            { title: 'Professional Sans', type: 'sans' },
+                                            { title: 'Elegant Serif', type: 'serif' },
+                                            { title: 'Creative', type: 'creative' },
+                                            { title: 'Modern Mono', type: 'mono' }
+                                        ].map(cat => (
+                                            <div key={cat.type}>
+                                                <p style={{ fontSize: '9px', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.05em' }}>{cat.title}</p>
+                                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(1, 1fr)', gap: '6px' }}>
+                                                    {RESUME_FONTS.filter(f => f.type === cat.type).map(f => (
+                                                        <button
+                                                            key={f.name}
+                                                            onClick={() => {
+                                                                updateSetting('fontFamily', f.name);
+                                                                setShowFontDropdown(false);
+                                                            }}
+                                                            style={{
+                                                                padding: '12px 14px',
+                                                                background: settings.fontFamily === f.name ? '#f5f3ff' : '#ffffff',
+                                                                border: `1.5px solid ${settings.fontFamily === f.name ? '#7c3aed' : '#f1f5f9'}`,
+                                                                borderRadius: '10px',
+                                                                textAlign: 'left',
+                                                                display: 'flex',
+                                                                justifyContent: 'space-between',
+                                                                alignItems: 'center'
+                                                        }}
+                                                        >
+                                                            <div style={{ 
+                                                                fontFamily: `var(${f.variable}), ${f.type === 'serif' ? 'serif' : 'sans-serif'}`,
+                                                                fontSize: '15px',
+                                                                color: settings.fontFamily === f.name ? '#7c3aed' : '#1e293b'
+                                                            }}>
+                                                                {f.name}
+                                                            </div>
+                                                            {settings.fontFamily === f.name && <Check size={14} color="#7c3aed" strokeWidth={3} />}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         )}
 
@@ -518,16 +627,156 @@ export default function DesignPanel({ data, setData, settings, setSettings, temp
 
             <div className="design-content-scroll" style={{ flex: 1, overflowY: 'auto', padding: '0 24px 24px' }}>
                 <div className="templates-section" style={{ marginBottom: '32px' }}>
-                    <h3 className="section-label-mid">Color Theme</h3>
-                    <div className="color-picker-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-                        <div className={`color-wheel-swatch ${!colors.includes(data.themeColor) ? 'active' : ''}`} onClick={handleCustomColorClick} style={{ width: '30px', height: '30px', cursor: 'pointer', position: 'relative' }}>
-                            <div className="gradient-sweep" style={{ width: '100%', height: '100%' }}></div>
-                            <input type="color" ref={colorInputRef} style={{ position: 'absolute', opacity: 0, width: 0, height: 0, pointerEvents: 'none' }} onChange={handleCustomColorChange} value={data.themeColor || '#3b82f6'} />
-                        </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                        <h3 className="section-label-mid" style={{ marginBottom: 0 }}>Color Theme</h3>
+                        <button 
+                            onClick={() => setShowCustomTuning(!showCustomTuning)}
+                            style={{ 
+                                fontSize: '10px', 
+                                fontWeight: 800, 
+                                color: showCustomTuning ? '#7c3aed' : '#94a3b8', 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                gap: '4px',
+                                background: showCustomTuning ? '#f5f3ff' : 'transparent',
+                                border: 'none',
+                                padding: '4px 8px',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s'
+                            }}
+                        >
+                            <SlidersIcon size={12} /> {showCustomTuning ? 'HIDE TUNING' : 'CUSTOM COLOR'}
+                        </button>
+                    </div>
+
+                    <div className="color-picker-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: showCustomTuning ? '20px' : 0 }}>
                         {colors.map(c => (
-                            <div key={c} className={`color-circle ${activeColor === c ? 'active' : ''}`} style={{ backgroundColor: c, width: '30px', height: '30px', cursor: 'pointer', border: activeColor === c ? '2px solid white' : '1px solid rgba(0,0,0,0.05)', boxShadow: activeColor === c ? `0 0 0 2px ${c}` : 'none' }} onClick={() => handleColorClick(c)} />
+                            <div 
+                                key={c} 
+                                className={`color-circle ${activeColor === c ? 'active' : ''}`} 
+                                style={{ 
+                                    backgroundColor: c, 
+                                    width: '32px', 
+                                    height: '32px', 
+                                    borderRadius: '10px',
+                                    cursor: 'pointer', 
+                                    border: activeColor === c ? '2.5px solid white' : '1px solid rgba(0,0,0,0.06)', 
+                                    boxShadow: activeColor === c ? `0 0 0 2px ${c}, 0 4px 12px rgba(0,0,0,0.1)` : '0 2px 4px rgba(0,0,0,0.02)',
+                                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }} 
+                                onClick={() => {
+                                    handleColorClick(c);
+                                    setShowCustomTuning(false);
+                                }} 
+                            >
+                                {activeColor === c && <Check size={16} color="white" strokeWidth={3} />}
+                            </div>
                         ))}
                     </div>
+
+                    {showCustomTuning && (
+                        <div style={{ 
+                            background: '#f8fafc', 
+                            borderRadius: '16px', 
+                            padding: '20px', 
+                            border: '1px solid #e2e8f0',
+                            animation: 'fadeIn 0.2s ease-out'
+                        }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                {/* Hue Slider */}
+                                <div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                        <label style={{ fontSize: '10px', fontWeight: 900, color: '#64748b', textTransform: 'uppercase' }}>Color Hue</label>
+                                        <span style={{ fontSize: '10px', fontWeight: 800, color: '#7c3aed' }}>{hslValues.h}°</span>
+                                    </div>
+                                    <div style={{ position: 'relative', height: '12px', borderRadius: '6px', background: 'linear-gradient(to right, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%)' }}>
+                                        <input 
+                                            type="range" 
+                                            min="0" max="360" 
+                                            value={hslValues.h}
+                                            onChange={handleHueChange}
+                                            style={{
+                                                position: 'absolute',
+                                                top: 0, left: 0, width: '100%', height: '100%',
+                                                opacity: 0, cursor: 'pointer'
+                                            }}
+                                        />
+                                        <div style={{ 
+                                            position: 'absolute', 
+                                            top: '50%', 
+                                            left: `${(hslValues.h / 360) * 100}%`,
+                                            transform: 'translate(-50%, -50%)',
+                                            width: '18px', height: '18px',
+                                            background: activeColor,
+                                            border: '3px solid white',
+                                            borderRadius: '50%',
+                                            boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                                            pointerEvents: 'none'
+                                        }} />
+                                    </div>
+                                </div>
+
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                                    {/* RGB Inputs */}
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                                        {[
+                                            { label: 'R', key: 'r', color: '#ef4444' },
+                                            { label: 'G', key: 'g', color: '#10b981' },
+                                            { label: 'B', key: 'b', color: '#3b82f6' }
+                                        ].map(({ label, key, color }) => (
+                                            <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                <span style={{ fontSize: '10px', fontWeight: 900, color: '#94a3b8', width: '12px' }}>{label}</span>
+                                                <input
+                                                    type="range"
+                                                    min="0" max="255"
+                                                    value={rgbValues[key]}
+                                                    onChange={(e) => handleRgbChange(key, e.target.value)}
+                                                    style={{ flex: 1, accentColor: color, height: '4px', cursor: 'pointer' }}
+                                                />
+                                                <div style={{ background: 'white', borderRadius: '6px', padding: '4px 10px', border: '1px solid #e2e8f0', minWidth: '44px', textAlign: 'center' }}>
+                                                    <span style={{ fontSize: '11px', fontWeight: 800, color: '#0f172a', fontVariantNumeric: 'tabular-nums' }}>{rgbValues[key]}</span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {/* Hex Input & Preview Row */}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', borderTop: '1px solid #f1f5f9', paddingTop: '20px' }}>
+                                        <div style={{ flex: 1 }}>
+                                            <label style={{ fontSize: '10px', fontWeight: 900, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '8px' }}>Hex Code</label>
+                                            <div style={{ 
+                                                display: 'flex', 
+                                                alignItems: 'center', 
+                                                gap: '10px', 
+                                                background: '#ffffff', 
+                                                padding: '10px 14px', 
+                                                borderRadius: '12px', 
+                                                border: '1.2px solid #e2e8f0'
+                                            }}>
+                                                <div style={{ width: '18px', height: '18px', borderRadius: '5px', backgroundColor: activeColor, flexShrink: 0, border: '1px solid rgba(0,0,0,0.05)' }} />
+                                                <input
+                                                    type="text"
+                                                    value={activeColor.toUpperCase()}
+                                                    onChange={handleHexChange}
+                                                    maxLength={7}
+                                                    style={{ border: 'none', width: '100%', fontSize: '14px', fontWeight: 700, outline: 'none', textTransform: 'uppercase', color: '#0f172a', letterSpacing: '0.02em' }}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div style={{ width: '1px', height: '32px', background: '#e2e8f0', alignSelf: 'flex-end', marginBottom: '10px' }} />
+                                        <div style={{ alignSelf: 'flex-end', marginBottom: '8px' }}>
+                                            <p style={{ fontSize: '9px', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>Preview</p>
+                                            <div style={{ width: '38px', height: '24px', borderRadius: '6px', background: activeColor, border: '1px solid rgba(0,0,0,0.1)' }} />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {recommendedColors.length > 0 && (
@@ -545,12 +794,115 @@ export default function DesignPanel({ data, setData, settings, setSettings, temp
                 )}
 
                 <div className="templates-section" style={{ marginBottom: '32px' }}>
-                    <h3 className="section-label-mid">Typography</h3>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                        <h3 className="section-label-mid" style={{ marginBottom: 0 }}>Typography</h3>
+                    </div>
+
                     <div style={{ position: 'relative' }}>
-                        <select value={settings.fontFamily} onChange={(e) => updateSetting('fontFamily', e.target.value)} style={{ width: '100%', padding: '12px 16px', border: '1px solid #e2e8f0', borderRadius: '0', fontSize: '14px', color: '#0f172a', appearance: 'none', background: '#f8fafc', cursor: 'pointer', fontFamily: settings.fontFamily, fontWeight: 500 }}>
-                            {fonts.map(f => <option key={f} value={f} style={{ fontFamily: f, fontSize: '16px', padding: '10px' }}>{f}</option>)}
-                        </select>
-                        <ChevronDown size={16} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#94a3b8' }} />
+                        <button 
+                            onClick={() => setShowFontDropdown(!showFontDropdown)}
+                            style={{
+                                width: '100%',
+                                padding: '14px 20px',
+                                background: '#f8fafc',
+                                border: `2px solid ${showFontDropdown ? '#7c3aed' : '#e2e8f0'}`,
+                                borderRadius: '12px',
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s'
+                            }}
+                        >
+                            <span style={{ 
+                                fontFamily: `var(${RESUME_FONTS.find(f => f.name === settings.fontFamily)?.variable || '--font-inter'})`,
+                                fontSize: '16px',
+                                fontWeight: 600,
+                                color: '#0f172a'
+                            }}>
+                                {settings.fontFamily}
+                            </span>
+                            <ChevronDown 
+                                size={18} 
+                                style={{ 
+                                    transform: showFontDropdown ? 'rotate(180deg)' : 'rotate(0)', 
+                                    transition: 'transform 0.2s', 
+                                    color: '#7c3aed' 
+                                }} 
+                            />
+                        </button>
+
+                        {showFontDropdown && (
+                            <div style={{ 
+                                position: 'absolute',
+                                top: 'calc(100% + 8px)',
+                                left: 0,
+                                right: 0,
+                                zIndex: 100,
+                                background: '#ffffff', 
+                                border: '1px solid #e2e8f0', 
+                                borderRadius: '16px',
+                                padding: '16px',
+                                maxHeight: '450px',
+                                overflowY: 'auto',
+                                boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)',
+                                animation: 'fadeIn 0.2s ease-out'
+                            }}>
+                                {[
+                                    { title: 'Professional Sans', type: 'sans' },
+                                    { title: 'Elegant Serif', type: 'serif' },
+                                    { title: 'Creative & Unique', type: 'creative' },
+                                    { title: 'Monospace', type: 'mono' }
+                                ].map(cat => (
+                                    <div key={cat.type} style={{ marginBottom: '20px' }}>
+                                        <p style={{ fontSize: '9px', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', marginBottom: '10px', letterSpacing: '0.05em', borderBottom: '1px solid #f1f5f9', paddingBottom: '4px' }}>{cat.title}</p>
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(1, 1fr)', gap: '4px' }}>
+                                            {RESUME_FONTS.filter(f => f.type === cat.type).map(f => (
+                                                <button
+                                                    key={f.name}
+                                                    onClick={() => {
+                                                        updateSetting('fontFamily', f.name);
+                                                        setShowFontDropdown(false);
+                                                    }}
+                                                    style={{
+                                                        padding: '10px 14px',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'space-between',
+                                                        background: settings.fontFamily === f.name ? '#f5f3ff' : 'transparent',
+                                                        border: `1.5px solid ${settings.fontFamily === f.name ? '#7c3aed' : 'transparent'}`,
+                                                        borderRadius: '10px',
+                                                        cursor: 'pointer',
+                                                        transition: 'all 0.1s ease',
+                                                        textAlign: 'left'
+                                                    }}
+                                                    onMouseEnter={(e) => {
+                                                        if (settings.fontFamily !== f.name) e.currentTarget.style.background = '#f8fafc';
+                                                    }}
+                                                    onMouseLeave={(e) => {
+                                                        if (settings.fontFamily !== f.name) e.currentTarget.style.background = 'transparent';
+                                                    }}
+                                                >
+                                                    <span style={{ 
+                                                        fontFamily: `var(${f.variable}), ${f.type === 'serif' ? 'serif' : 'sans-serif'}`,
+                                                        fontSize: '15px', 
+                                                        color: settings.fontFamily === f.name ? '#7c3aed' : '#1e293b',
+                                                        fontWeight: settings.fontFamily === f.name ? 600 : 400
+                                                    }}>
+                                                        {f.name}
+                                                    </span>
+                                                    {settings.fontFamily === f.name && (
+                                                        <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                            <Check size={10} color="white" strokeWidth={4} />
+                                                        </div>
+                                                    )}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </div>
 

@@ -116,19 +116,36 @@ const FunLoader = ({ text }) => {
                     </AnimatePresence>
                 </div>
 
-                {/* Clean Infinite Loader Bar */}
-                <div className="mt-10 w-48 h-1 bg-stone-100 rounded-full overflow-hidden relative">
-                    <motion.div 
-                        animate={{ 
-                            x: ['-100%', '100%'],
-                        }}
-                        transition={{ 
-                            duration: 2, 
-                            repeat: Infinity, 
-                            ease: "easeInOut" 
-                        }}
-                        className="absolute inset-0 w-2/3 bg-stone-900"
-                    />
+                {/* Clean Infinite Loader - Circular Progress synced with other loaders */}
+                <div className="mt-10 relative">
+                    <svg className="w-8 h-8 rotate-[-90deg]">
+                        <circle
+                            cx="16"
+                            cy="16"
+                            r="14"
+                            stroke="currentColor"
+                            strokeWidth="3"
+                            fill="transparent"
+                            className="text-stone-100"
+                        />
+                        <motion.circle
+                            cx="16"
+                            cy="16"
+                            r="14"
+                            stroke="currentColor"
+                            strokeWidth="3"
+                            fill="transparent"
+                            strokeDasharray="88"
+                            initial={{ strokeDashoffset: 88 }}
+                            animate={{ strokeDashoffset: [88, 0, -88] }}
+                            transition={{ 
+                                duration: 2, 
+                                repeat: Infinity, 
+                                ease: "easeInOut" 
+                            }}
+                            className="text-stone-900"
+                        />
+                    </svg>
                 </div>
             </div>
 

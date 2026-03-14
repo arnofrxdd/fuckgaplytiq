@@ -6,6 +6,7 @@ import Placeholder from './Placeholder';
 import { templatesConfig } from './TemplateManager';
 import TemplateRegistryMap from './TemplateRegistry';
 import { ResumeContext } from './ResumeContext';
+import { RESUME_FONTS } from '@/lib/fonts.config';
 
 import { getMockDataForTemplate } from '../components/MockProfiles';
 import { ZETY_MOCK_DATA } from '../utils/zetyMockData';
@@ -320,9 +321,22 @@ const ResumeRenderer = React.memo(({
   //             2. Global manual design panel font selection
   //             3. Template's unique DESIGNED font
   //             4. System fallback
-  const themeFont = forceDefault
-    ? (templateConfig.defaultFont || "'Inter', sans-serif")
-    : (templateLayoutSettings.designSettings?.fontFamily || templateLayoutSettings.fontFamily || actualDesignSettings.fontFamily || templateConfig.defaultFont || "'Inter', sans-serif");
+  const rawFont = forceDefault
+    ? (templateConfig.defaultFont || "Plus Jakarta Sans")
+    : (templateLayoutSettings.designSettings?.fontFamily || templateLayoutSettings.fontFamily || actualDesignSettings.fontFamily || templateConfig.defaultFont || "Plus Jakarta Sans");
+
+  // Map the font name to the CSS variable if it exists in our config
+  const getEffectiveFont = (fontName) => {
+    const fontConfig = RESUME_FONTS.find(f => f.name === fontName);
+    if (fontConfig) {
+      const fallback = fontConfig.type === 'serif' ? 'serif' : 'sans-serif';
+      return `var(${fontConfig.variable}), ${fallback}`;
+    }
+    // Fallback if not in config (keeps compatibility with existing templates)
+    return fontName.includes(',') ? fontName : `'${fontName}', sans-serif`;
+  };
+
+  const themeFont = getEffectiveFont(rawFont);
 
   // Helper for RGB color (to support RGBA in CSS)
   const hexToRgb = (hex) => {
@@ -340,9 +354,13 @@ const ResumeRenderer = React.memo(({
 
   // Dynamic Font Loading (Optimized for RAM/Network)
   useEffect(() => {
-    const fontLink = getFontImportLink(themeFont);
+    // Only load if it's a custom font not in our pre-loaded RESUME_FONTS list
+    const isPreloaded = RESUME_FONTS.some(f => f.name === rawFont);
+    if (isPreloaded) return;
+
+    const fontLink = getFontImportLink(rawFont);
     if (fontLink) {
-      const linkId = `font-${themeFont.replace(/\s+/g, '-').replace(/['"]/g, '')}`;
+      const linkId = `font-${rawFont.replace(/\s+/g, '-').replace(/['"]/g, '')}`;
       if (!document.getElementById(linkId)) {
         const link = document.createElement('link');
         link.id = linkId;
@@ -351,7 +369,7 @@ const ResumeRenderer = React.memo(({
         document.head.appendChild(link);
       }
     }
-  }, [themeFont]);
+  }, [rawFont]);
 
   if (!TemplateComponent) {
     if (templateId) console.warn(`Template ID "${templateId}" not found in registry.`);
