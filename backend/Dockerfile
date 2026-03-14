@@ -1,5 +1,5 @@
 # Backend Dockerfile
-FROM node:18-slim
+FROM node:20-slim
 
 # Install system dependencies for canvas and puppeteer
 RUN apt-get update && apt-get install -y \
@@ -28,16 +28,15 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# Copy package files from backend
+# Copy package files and prisma schema first
 COPY backend/package*.json ./backend/
+COPY backend/prisma ./backend/prisma/
 
 # Install dependencies for backend
 WORKDIR /app/backend
 RUN npm install
 
-# Copy prisma schema and generate client
-# Context is root, so prisma is at backend/prisma
-COPY backend/prisma ./prisma/
+# Generate prisma client (already done by postinstall, but good to keep explicit if needed)
 RUN npx prisma generate
 
 # Copy the backend code and shared code

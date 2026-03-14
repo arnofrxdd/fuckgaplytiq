@@ -1,5 +1,5 @@
 # Frontend Dockerfile
-FROM node:18-slim AS builder
+FROM node:20-slim AS builder
 
 WORKDIR /app
 
@@ -25,7 +25,7 @@ ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
 RUN npm run build
 
 # Production image
-FROM node:18-slim AS runner
+FROM node:20-slim AS runner
 
 WORKDIR /app
 
