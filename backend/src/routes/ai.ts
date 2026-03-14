@@ -304,9 +304,11 @@ router.post('/optimizeExport', authGuard, rateLimit(5, 60 * 60 * 1000), async (r
 })
 
 // Header Intelligence
-router.post('/header-intelligence', rateLimit(50, 60 * 60 * 1000), async (req: any, res: any) => {
+router.post(['/header-intelligence', '/header-intelligence/'], rateLimit(50, 60 * 60 * 1000), async (req: any, res: any) => {
     try {
         const { type, value, context } = req.body;
+        console.log(`🧠 [AI] Header Intelligence Request: type=${type}, value=${typeof value === 'string' ? value.slice(0, 50) : 'complex'}`);
+        
         if (!type || value === undefined) {
             return res.status(400).json({ error: 'type and value are required' });
         }
@@ -314,8 +316,12 @@ router.post('/header-intelligence', rateLimit(50, 60 * 60 * 1000), async (req: a
         const result = await getHeaderIntelligence(type, value, context);
         res.json({ result });
     } catch (error: any) {
-        console.error('Header Intelligence failed', error);
-        res.status(500).json({ error: 'Failed to process intelligence', details: error?.message || 'Unknown error' });
+        console.error('❌ [AI] Header Intelligence Critical Failure:', error);
+        res.status(500).json({ 
+            error: 'Failed to process intelligence', 
+            details: error?.message || String(error),
+            stack: process.env.NODE_ENV === 'development' ? error?.stack : undefined
+        });
     }
 });
 
