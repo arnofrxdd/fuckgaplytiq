@@ -397,7 +397,7 @@ export default function Finalize({ data, setData, onChangeTemplate, onDownloadPD
 
     const handleSignOut = async () => {
         await supabaseClient.auth.signOut();
-        window.location.href = '/';
+        window.location.href = '/resumy/';
     };
 
     // -- Export Settings --
@@ -2251,7 +2251,7 @@ export default function Finalize({ data, setData, onChangeTemplate, onDownloadPD
                                     )}
                                     <button
                                         style={{ width: '100%', height: isMobile ? '48px' : '52px', background: '#f8fafc', color: '#475569', border: '1px solid #e2e8f0', borderRadius: '14px', fontWeight: 700, fontSize: '12px', letterSpacing: '0.05em', textTransform: 'uppercase', cursor: 'pointer' }}
-                                        onClick={() => window.location.href = '/dashboard'}
+                                        onClick={() => window.location.href = '/resumy/dashboard'}
                                     >
                                         View All Projects
                                     </button>
@@ -2322,12 +2322,12 @@ export default function Finalize({ data, setData, onChangeTemplate, onDownloadPD
                             </div>
                             <h3 className="text-2xl font-black text-stone-900 tracking-tighter mb-2">Leave Editor?</h3>
                             <p className="text-stone-500 font-medium text-sm mb-8 leading-relaxed">
-                                Are you sure you want to {navTarget === '/' ? 'leave the app' : navTarget === '/resume-creator' ? 'go back to Onboarding' : 'return to your Dashboard'}? <strong>All your progress is automatically saved to your drafts.</strong>
+                                Are you sure you want to {navTarget === '/' ? 'leave the app' : navTarget === '/resumy/resume-creator' ? 'go back to Onboarding' : 'return to your Dashboard'}? <strong>All your progress is automatically saved to your drafts.</strong>
                             </p>
                             <div className="flex flex-col gap-3">
                                 <button
                                     onClick={() => {
-                                        window.location.href = navTarget;
+                                        window.location.href = navTarget === '/' ? '/resumy/' : navTarget;
                                     }}
                                     className="w-full py-4 bg-stone-900 text-white font-black text-xs uppercase tracking-widest hover:bg-black transition-colors"
                                 >

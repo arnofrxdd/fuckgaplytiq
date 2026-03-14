@@ -460,7 +460,7 @@ export default function FormPanel({ data, setData, templateId, onChangeTemplate,
                     alert("You have reached the maximum limit of 5 drafts. Please delete an existing draft to create a new one.");
                     setIsSwitching(false);
                     isInitializing.current = false;
-                    window.location.href = '/resume-creator'; // Prevent form render, send back to hub
+                    window.location.href = '/resumy/resume-creator'; // Prevent form render, send back to hub
                     return;
                 }
             }
@@ -695,7 +695,7 @@ export default function FormPanel({ data, setData, templateId, onChangeTemplate,
         const { error } = await supabaseClient.from('builder_resumes').delete().eq('id', id);
         if (!error) {
             setDrafts(prev => prev.filter(d => d.id !== id));
-            if (id === resumeId) window.location.href = '/resume-creator'; // Simple way to handle deleted active draft
+            if (id === resumeId) window.location.href = '/resumy/resume-creator'; // Simple way to handle deleted active draft
             await fetchDrafts(); // Refresh sync
         }
     };
@@ -1276,7 +1276,7 @@ export default function FormPanel({ data, setData, templateId, onChangeTemplate,
             if (zip !== "" && !/^\d+$/.test(zip)) return;
             if (zip.length > 6) return;
         }
-        // US/General: Usually numeric with dashes/spaces. 
+        // US/General: Usually numeric with dashes/spaces.
         // We'll block alphabets by default UNLESS it's a country known for them (like UK)
         else if (country !== "United Kingdom" && zip !== "" && /[a-zA-Z]/.test(zip)) {
             return;
@@ -1507,7 +1507,7 @@ export default function FormPanel({ data, setData, templateId, onChangeTemplate,
     };
 
     const renderStep = () => {
-        // ID-Shift Safety: Find the step object. Fallback to "Finalize" if we are in the high-step range 
+        // ID-Shift Safety: Find the step object. Fallback to "Finalize" if we are in the high-step range
         // but the exact ID is missing (common during section removal).
         const currentStepObj = allSteps.find(s => s.id === step) ||
             (step >= successStepId ? allSteps.find(s => s.label === "Finalize") : null);
@@ -1542,6 +1542,7 @@ export default function FormPanel({ data, setData, templateId, onChangeTemplate,
                         try {
                             await handleSaveDraft();
                             await fetchDrafts();
+                            if (isMobile) setIsMobileMenuOpen(false);
                             setIsDraftExplorerOpen(true);
                         } catch (err) {
                             console.error("Error in onOpenDraftExplorer:", err);
@@ -2283,7 +2284,7 @@ export default function FormPanel({ data, setData, templateId, onChangeTemplate,
                             }}
                             onRenameDraft={handleRenameDraft}
                             onDeleteDraft={handleDeleteDraft}
-                            onStartNew={() => window.location.href = '/resume-creator?step=initial'}
+                            onStartNew={() => window.location.href = '/resumy/resume-creator?step=initial'}
                         />
                     )}
                 </AnimatePresence>
@@ -2391,7 +2392,7 @@ export default function FormPanel({ data, setData, templateId, onChangeTemplate,
 
                                     <div className="secondary-nav">
                                         {!jobId && (
-                                            <button onClick={() => setNavTarget('/resume-creator')} className="secondary-nav-btn">
+                                            <button onClick={() => setNavTarget('/resumy/resume-creator')} className="secondary-nav-btn">
                                                 <User size={14} strokeWidth={2.5} /> <span>Home</span>
                                             </button>
                                         )}
@@ -2579,12 +2580,12 @@ export default function FormPanel({ data, setData, templateId, onChangeTemplate,
                                 </div>
                                 <h3 className="text-2xl font-black text-stone-900 tracking-tighter mb-2">Leave Editor?</h3>
                                 <p className="text-stone-500 font-medium text-sm mb-8 leading-relaxed">
-                                    Are you sure you want to {navTarget === '/' ? 'leave the app' : navTarget === '/resume-creator' ? 'go back to Onboarding' : 'return to your Dashboard'}? <strong>All your progress is automatically saved to your drafts.</strong>
+                                    Are you sure you want to {navTarget === '/' ? 'leave the app' : navTarget === '/resumy/resume-creator' ? 'go back to Onboarding' : 'return to your Dashboard'}? <strong>All your progress is automatically saved to your drafts.</strong>
                                 </p>
                                 <div className="flex flex-col gap-3">
                                     <button
                                         onClick={() => {
-                                            window.location.href = navTarget;
+                                            window.location.href = navTarget === '/' ? '/resumy/' : navTarget;
                                         }}
                                         className="w-full py-4 bg-stone-900 text-white font-black text-xs uppercase tracking-widest hover:bg-black transition-colors"
                                     >
