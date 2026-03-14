@@ -497,6 +497,28 @@
     text-decoration: none;
 }
 
+.header-nav-faq {
+    margin-right: auto;
+    margin-left: 32px;
+}
+
+.nav-link-faq {
+    background: none;
+    border: none;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--onboarding-text-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 8px 12px;
+    border-radius: 8px;
+}
+
+.nav-link-faq:hover {
+    color: var(--onboarding-text);
+    background: rgba(0, 0, 0, 0.03);
+}
+
 .logo-text {
     font-size: 1.25rem;
     font-weight: 800;
@@ -723,6 +745,7 @@
 /* Redesigned Gallery */
 .gallery-section {
     padding-top: 100px;
+    grid-column: 1 / -1;
 }
 
 /* Main Content Area */

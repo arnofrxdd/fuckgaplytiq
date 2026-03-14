@@ -26,6 +26,7 @@ import ResumeImportLoader from "./ResumeImportLoader";
 import ResumeCreatorArt from "@/components/landing-redesign/features/ResumeCreatorArt";
 import PremiumTemplateSelection from "./PremiumTemplateSelection";
 import OnboardingLogin from "./OnboardingLogin";
+import FAQSection from "./FAQSection";
 
 // --- CONSTANTS ---
 const STEPS = {
@@ -575,6 +576,17 @@ export default function OnboardingRedesign({ onComplete, onBack, mode = "new", d
                         <ResumyLogo size={28} />
                     </Link>
 
+                    {step === STEPS.WELCOME && (
+                        <nav className="header-nav-faq hidden md:flex">
+                            <button 
+                                onClick={() => document.getElementById('faq-section')?.scrollIntoView({ behavior: 'smooth' })}
+                                className="nav-link-faq"
+                            >
+                                FAQ
+                            </button>
+                        </nav>
+                    )}
+
                     <div className="user-profile" style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '12px' }}>
                         {isAuthenticated ? (
                             <>
@@ -773,6 +785,9 @@ export default function OnboardingRedesign({ onComplete, onBack, mode = "new", d
                                         />
                                     </div>
                                 </div>
+
+                                {/* FAQ SECTION */}
+                                <FAQSection />
                             </motion.div>
                         )}
 
