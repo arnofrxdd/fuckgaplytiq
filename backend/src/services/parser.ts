@@ -91,8 +91,8 @@ function normalizeToSchema(aiParsed: any, rawText: string) {
     const website = str(p.website);
     const dob = str(p.dob ?? p.dateOfBirth ?? p.birthDate);
     const nationality = str(p.nationality);
-    const maritalStatus = str(p.maritalStatus ?? p.marital_status);
-    const visaStatus = str(p.visaStatus ?? p.visa_status);
+    // const maritalStatus = str(p.maritalStatus ?? p.marital_status);
+    // const visaStatus = str(p.visaStatus ?? p.visa_status);
     const gender = str(p.gender);
     const religion = str(p.religion);
     const passport = str(p.passport ?? p.passportNumber);
@@ -262,8 +262,8 @@ function normalizeToSchema(aiParsed: any, rawText: string) {
             zipCode,
             dob,
             nationality,
-            maritalStatus,
-            visaStatus,
+            // maritalStatus,
+            // visaStatus,
             gender,
             religion,
             passport,
@@ -392,8 +392,8 @@ export async function extractStructuredResume(text: string, meta?: any): Promise
                 website: '',
                 dob: '',
                 nationality: '',
-                maritalStatus: '',
-                visaStatus: '',
+                // maritalStatus: '',
+                // visaStatus: '',
                 gender: '',
                 religion: '',
                 passport: '',

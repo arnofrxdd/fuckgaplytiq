@@ -26,6 +26,7 @@ import { useRouter } from 'next/navigation';
 import PremiumTemplateSelection from './PremiumTemplateSelection';
 import OnboardingGuide from './OnboardingGuide';
 import { useResumeHistory } from '../hooks/useResumeHistory';
+import { RESUME_FONTS } from '@/lib/fonts.config';
 
 const VirtualTemplateCard = React.memo(({ t, data, isActive, isLoading, onClick }) => {
     const [isInView, setIsInView] = useState(false);
@@ -712,9 +713,32 @@ export default function Finalize({ data, setData, onChangeTemplate, onDownloadPD
                 .map(link => link.outerHTML)
                 .join('\n');
 
+            // 3b. Determine Active Font for Google Fonts injection
+            const activeTemplateIdForPdf = templateId || data.templateId || 'unified-template';
+            const templateLayoutSettings = data.templateLayouts?.[activeTemplateIdForPdf] || {};
+            const templateConfig = templatesConfig.find(t => t.id === activeTemplateIdForPdf) || {};
+            
+            const rawFont = templateLayoutSettings.designSettings?.fontFamily || 
+                           templateLayoutSettings.fontFamily || 
+                           designSettings.fontFamily || 
+                           templateConfig.defaultFont || 
+                           "Plus Jakarta Sans";
+
+            const fontName = rawFont.split(',')[0].replace(/['"]/g, '').trim();
+            const fontConfig = RESUME_FONTS.find(f => f.name === fontName);
+            const fontVariable = fontConfig ? fontConfig.variable : `--font-${fontName.toLowerCase().replace(/\s+/g, '-')}`;
+            
+            const formattedFontName = fontName.replace(/\s+/g, '+');
+            const googleFontLink = `<link href="https://fonts.googleapis.com/css2?family=${formattedFontName}:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">`;
+
             // 4. Construct PDF-specific CSS
             const pdfStyles = `
                 <style>
+                    /* Map font variable for PDF */
+                    :root {
+                        ${fontVariable}: '${fontName}', sans-serif;
+                    }
+
                     /* Reset for PDF */
                     @page { margin: 0; size: auto; }
                     html, body { 
@@ -809,11 +833,12 @@ export default function Finalize({ data, setData, onChangeTemplate, onDownloadPD
 
             const fullHtml = `
                 <!DOCTYPE html>
-                <html>
+                <html class="${document.documentElement.className}">
                 <head>
                     <meta charset="utf-8">
                     <title>${data.personal?.name || 'Resume'}</title>
                     <base href="${window.location.origin}/" />
+                    ${googleFontLink}
                     ${linkTags}
                     ${styleTags}
                     ${pdfStyles}

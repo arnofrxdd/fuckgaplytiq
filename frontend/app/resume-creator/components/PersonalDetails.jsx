@@ -153,7 +153,7 @@ export default function PersonalDetails({ data, setData, onBack, onNext, isQuick
                     templateName={currentTemplateName}
                     error={errors.nationality}
                 />
-                <StudioSelect
+                {/* <StudioSelect
                     label="Marital Status"
                     value={personal.maritalStatus}
                     onChange={(e) => handleChange('maritalStatus', e.target.value)}
@@ -170,7 +170,7 @@ export default function PersonalDetails({ data, setData, onBack, onNext, isQuick
                     isSupported={isFieldSupported('personal.visaStatus')}
                     templateName={currentTemplateName}
                     error={errors.visaStatus}
-                />
+                /> */}
             </div>
 
             {/* Additional Information Section */}

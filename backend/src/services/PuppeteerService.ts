@@ -59,6 +59,9 @@ export class PuppeteerService {
                 timeout: 45000
             });
 
+            // Wait for all fonts to be fully loaded and ready
+            await page.evaluateHandle('document.fonts.ready');
+
             const pdfOptions: any = {
                 printBackground: true,
                 margin: { top: '0px', right: '0px', bottom: '0px', left: '0px' },

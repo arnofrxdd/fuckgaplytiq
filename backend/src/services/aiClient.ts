@@ -116,8 +116,8 @@ Return a JSON object with the EXACT following structure, with NO missing mandato
     "github": "string (github profile URL like https://github.com/username)",
     "dob": "string (DD/MM/YYYY)",
     "nationality": "string",
-    "maritalStatus": "string",
-    "visaStatus": "string",
+    // "maritalStatus": "string",
+    // "visaStatus": "string",
     "gender": "string",
     "religion": "string",
     "passport": "string",
@@ -152,7 +152,7 @@ Return a JSON object with the EXACT following structure, with NO missing mandato
       "description": "string (optional coursework, honors)"
     }
   ],
-  "skills": [{"name": "string", "level": "number (1-5)"}],
+  "skills": [{"name": "string", "level": "number (1-5)"}], // CRITICAL: Extract ONLY 5-7 most relevant professional skills.
   "strengths": [{"name": "string", "level": "number (1-5)"}],
   "additionalSkills": [{"name": "string", "level": "number (1-5)"}],
   "certifications": [
@@ -195,7 +195,7 @@ Return a JSON object with the EXACT following structure, with NO missing mandato
 IMPORTANT EXTRACTION RULES:
 1. MANDATORY: The 'initial_analysis' object MUST be generated and MUST NOT be omitted.
 2. STRICT CITY/STATE SEPARATION: If city and state are combined (e.g., 'San Francisco, CA'), you MUST split them. Place 'San Francisco' in 'city' and 'CA' in 'state'. The 'city' field should NEVER contain state names, provinces, or country names.
-3. SKILLS LIMIT: Extract at most 15 of the most important professional skills. Focus on unique technologies and core competencies. Avoid generic or repetitive keywords.
+3. SKILLS LIMIT: Extract ONLY 5-7 of the most high-impact professional skills. Focus on unique technologies and core competencies that define the candidate's expertise. Avoid generic or repetitive keywords.
 4. ZERO REDUNDANCY: Aggressively deduplicate entries. If a project or job appears multiple times (even with different descriptions), MERGE them into a single comprehensive entry. Do NOT list the same title twice in 'experiences' or 'projects'.
 5. Professional headline: Extract a high-impact job title from the top of the resume. If missing, create one (e.g., 'Senior Software Engineer').
 6. DATES: Start/End Months MUST ONLY contain the Full month name (e.g., 'January') OR 'Present'. NEVER include the year in the month field. Years MUST be properly extracted to Start/End Year fields separately.

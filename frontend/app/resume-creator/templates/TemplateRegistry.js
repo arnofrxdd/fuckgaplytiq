@@ -37,6 +37,7 @@ const CeruleanCircle = dynamic(() => import("./CeruleanCircle/CeruleanCircle"), 
 const OchreExecutive = dynamic(() => import("./OchreExecutive/OchreExecutive"), { ssr: false });
 const AzureExecutive = dynamic(() => import("./AzureExecutive/AzureExecutive"), { ssr: false });
 const AmberElite = dynamic(() => import("./AmberElite/AmberElite"), { ssr: false });
+const AcademicLatex = dynamic(() => import("./AcademicLatex/AcademicLatex"), { ssr: false });
 
 const TEMPLATE_COMPONENTS = {
     "creative-marketing": CreativeMarketing,
@@ -72,6 +73,7 @@ const TEMPLATE_COMPONENTS = {
     "ochre-executive": OchreExecutive,
     "azure-executive": AzureExecutive,
     "amber-elite": AmberElite,
+    "academic-latex": AcademicLatex,
 };
 
 export default TEMPLATE_COMPONENTS;

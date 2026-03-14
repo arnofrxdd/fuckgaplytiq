@@ -650,6 +650,22 @@ export const templatesConfig = [
     },
     defaults: { fontSize: 0.95, fontFamily: "Inter", sectionSpacing: 1.4, paragraphSpacing: 1.2, lineHeight: 1.6, letterSpacing: 0, pageMargin: 40 },
     useRootPadding: false
+  },
+  {
+    id: "academic-latex",
+    name: "Academic LaTeX",
+    thumbnail: "/templates/placeholder.png",
+    description: "A clean, academic-focused template inspired by LaTeX formatting.",
+    tags: ["Academic", "LaTeX", "Clean", "Professional"],
+    defaultColor: "#1a1a1a",
+    defaultFont: "'EB Garamond', serif",
+    recommendedColors: ["#1a1a1a", "#2c3e50", "#333333"],
+    theme: { background: "#ffffff", text: "#1a1a1a" },
+    layout: {
+      main: ["summary", "experience", "education", "projects", "skills", "certifications", "custom"]
+    },
+    defaults: { fontSize: 0.95, fontFamily: "EB Garamond", sectionSpacing: 1.1, paragraphSpacing: 1, lineHeight: 1.5, letterSpacing: 0, pageMargin: 40 },
+    useRootPadding: false
   }
 ];
 

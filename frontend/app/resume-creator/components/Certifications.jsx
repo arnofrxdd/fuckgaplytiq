@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ArrowLeft, Plus, Search, Trash2, Calendar, FileText, Award, Loader2 } from "lucide-react";
+import { ArrowLeft, Plus, Search, Trash2, Calendar, FileText, Award, Loader2, Check, ChevronDown, ChevronUp } from "lucide-react";
 import { Editor, EditorProvider, Toolbar, BtnBold, BtnItalic, BtnUnderline, BtnBulletList } from 'react-simple-wysiwyg';
 import "./form.css";
 
@@ -25,6 +25,11 @@ export default function Certifications({ data, setData, onBack, onNext, isQuickE
     ]);
     const [isLoading, setIsLoading] = useState(false);
     const [errors, setErrors] = useState({});
+    const [expandedDetails, setExpandedDetails] = useState({});
+
+    const toggleDetails = (idx) => {
+        setExpandedDetails(prev => ({ ...prev, [idx]: !prev[idx] }));
+    };
 
     const fetchAiCertifications = async () => {
         if (!searchTerm) return;
@@ -168,29 +173,57 @@ export default function Certifications({ data, setData, onBack, onNext, isQuickE
                             {isLoading ? (
                                 <div style={{ textAlign: 'center', padding: '20px' }}><Loader2 size={24} className="spin" color="#635bff" /></div>
                             ) : (
-                                suggestions.map((s, idx) => (
-                                    <button
-                                        key={idx}
-                                        onClick={() => {
-                                            const lastIdx = certifications.length - 1;
-                                            if (!certifications[lastIdx].name) {
-                                                updateCert(lastIdx, 'name', s);
-                                            } else {
-                                                setData(prev => ({
-                                                    ...prev,
-                                                    certifications: [
-                                                        ...(prev.certifications || []),
-                                                        { date: '', name: s, issuer: '', description: '' }
-                                                    ]
-                                                }));
-                                            }
-                                        }}
-                                        className="studio-example-pill"
-                                    >
-                                        <Plus size={14} className="studio-pill-icon" style={{ color: '#635bff' }} />
-                                        <span className="studio-pill-text">{s}</span>
-                                    </button>
-                                ))
+                                suggestions.map((s, idx) => {
+                                    const isAlreadyAdded = certifications.some(c => c.name?.toLowerCase().trim() === s.toLowerCase().trim());
+                                    
+                                    return (
+                                        <button
+                                            key={idx}
+                                            onClick={() => {
+                                                if (isAlreadyAdded) {
+                                                    const certIndex = certifications.findIndex(c => c.name?.toLowerCase().trim() === s.toLowerCase().trim());
+                                                    if (certIndex !== -1) removeCert(certIndex);
+                                                    return;
+                                                }
+                                                
+                                                // If there's only one item and it's empty, use it
+                                                if (certifications.length === 1 && !certifications[0].name && !certifications[0].issuer) {
+                                                    updateCert(0, 'name', s);
+                                                } else {
+                                                    setData(prev => ({
+                                                        ...prev,
+                                                        certifications: [
+                                                            ...(prev.certifications || []),
+                                                            { date: '', name: s, issuer: '', description: '' }
+                                                        ]
+                                                    }));
+                                                }
+                                            }}
+                                            className={`studio-example-pill ${isAlreadyAdded ? 'checked' : ''}`}
+                                            style={{
+                                                opacity: isAlreadyAdded ? 0.7 : 1,
+                                                cursor: isAlreadyAdded ? 'default' : 'pointer',
+                                                borderColor: isAlreadyAdded ? '#10b981' : '#e2e8f0',
+                                                background: isAlreadyAdded ? '#f0fdf4' : 'white'
+                                            }}
+                                        >
+                                            <div style={{
+                                                width: '18px',
+                                                height: '18px',
+                                                borderRadius: '4px',
+                                                border: `1.5px solid ${isAlreadyAdded ? '#10b981' : '#cbd5e1'}`,
+                                                background: isAlreadyAdded ? '#10b981' : 'transparent',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                marginRight: '10px'
+                                            }}>
+                                                {isAlreadyAdded ? <Check size={12} color="white" strokeWidth={3} /> : <Plus size={12} color="#635bff" />}
+                                            </div>
+                                            <span className="studio-pill-text" style={{ color: isAlreadyAdded ? '#065f46' : '#475569' }}>{s}</span>
+                                        </button>
+                                    );
+                                })
                             )}
                         </div>
                     </div>
@@ -246,43 +279,67 @@ export default function Certifications({ data, setData, onBack, onNext, isQuickE
                                 )}
                             </div>
 
-                            <div className="zety-input-wrap" style={{ marginBottom: '20px' }}>
-                                <label className="zety-label" style={{ marginBottom: '8px', display: 'block' }}>Authority / Issuer</label>
-                                <div className="input-container">
-                                    <input
-                                        className="zety-input-field"
-                                        placeholder="e.g. Amazon Web Services"
-                                        value={cert.issuer || ''}
-                                        onChange={(e) => updateCert(idx, 'issuer', e.target.value)}
-                                    />
-                                </div>
-                            </div>
+                            <button
+                                onClick={() => toggleDetails(idx)}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    fontSize: '13px',
+                                    fontWeight: 600,
+                                    color: '#635bff',
+                                    background: 'transparent',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    padding: '0',
+                                    marginBottom: expandedDetails[idx] ? '20px' : '0'
+                                }}
+                            >
+                                {expandedDetails[idx] ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                                {expandedDetails[idx] ? 'Hide details' : 'Add authority & description'}
+                            </button>
 
-                            <div className="zety-input-wrap">
-                                <label className="zety-label" style={{ marginBottom: '8px', display: 'block' }}>Description (Optional)</label>
-                                <div className="studio-ws-editor" style={{ height: '400px', display: 'flex', flexDirection: 'column', border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden' }}>
-                                    <div className="studio-editor-canvas" style={{ flex: 1, overflow: 'hidden' }}>
-                                        <EditorProvider>
-                                            <Editor
-                                                value={cert.description || ''}
-                                                onChange={(e) => updateCert(idx, 'description', e.target.value)}
-                                                containerProps={{
-                                                    style: {
-                                                        height: '100%',
-                                                        border: 'none',
-                                                        outline: 'none',
-                                                        overflowY: 'auto'
-                                                    }
-                                                }}
-                                            >
-                                                <Toolbar>
-                                                    <BtnBold /><BtnItalic /><BtnUnderline /><BtnBulletList />
-                                                </Toolbar>
-                                            </Editor>
-                                        </EditorProvider>
+                            {expandedDetails[idx] && (
+                                <div className="animate-fade-down">
+                                    <div className="zety-input-wrap" style={{ marginBottom: '20px' }}>
+                                        <label className="zety-label" style={{ marginBottom: '8px', display: 'block' }}>Authority / Issuer</label>
+                                        <div className="input-container">
+                                            <input
+                                                className="zety-input-field"
+                                                placeholder="e.g. Amazon Web Services"
+                                                value={cert.issuer || ''}
+                                                onChange={(e) => updateCert(idx, 'issuer', e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="zety-input-wrap">
+                                        <label className="zety-label" style={{ marginBottom: '8px', display: 'block' }}>Description (Optional)</label>
+                                        <div className="studio-ws-editor" style={{ height: '300px', display: 'flex', flexDirection: 'column', border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden' }}>
+                                            <div className="studio-editor-canvas" style={{ flex: 1, overflow: 'hidden' }}>
+                                                <EditorProvider>
+                                                    <Editor
+                                                        value={cert.description || ''}
+                                                        onChange={(e) => updateCert(idx, 'description', e.target.value)}
+                                                        containerProps={{
+                                                            style: {
+                                                                height: '100%',
+                                                                border: 'none',
+                                                                outline: 'none',
+                                                                overflowY: 'auto'
+                                                            }
+                                                        }}
+                                                    >
+                                                        <Toolbar>
+                                                            <BtnBold /><BtnItalic /><BtnUnderline /><BtnBulletList />
+                                                        </Toolbar>
+                                                    </Editor>
+                                                </EditorProvider>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            )}
                         </div>
                     ))}
 
