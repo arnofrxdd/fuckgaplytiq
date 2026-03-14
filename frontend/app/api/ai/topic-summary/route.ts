@@ -6,7 +6,9 @@ export async function POST(request: NextRequest) {
         const { topic } = body;
 
         // --- Use Backend AI (which handles OpenAI keys) ---
-        const backendUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/ai/topic-summary`;
+        const isDev = process.env.NODE_ENV === 'development';
+        const backendBaseUrl = isDev ? 'http://localhost:3001' : 'http://resumy-backend:3001';
+        const backendUrl = `${backendBaseUrl}/api/ai/topic-summary`;
 
         console.log(`[AI PROXY] Forwarding topic summary to backend: ${backendUrl} (Topic: ${topic})`);
 
