@@ -11,7 +11,8 @@ import {
     Zap, Star, Award, MessageSquare, Menu, X, ArrowLeft, ArrowRight,
     Layers, Grid, List, Type, Palette, MoreHorizontal, Shield, Clock,
     AlertCircle, Cpu, UploadCloud, Maximize2, RefreshCw, Info, Users, Heart,
-    BarChart2, Sparkles, ChevronLeft, Loader2, Cloud, CheckCircle2, RefreshCcw, ShieldCheck, Navigation
+    BarChart2, Sparkles, ChevronLeft, Loader2, Cloud, CheckCircle2, RefreshCcw, ShieldCheck, Navigation,
+    Square, Circle, Hexagon, Diamond
 } from 'lucide-react';
 import { supabaseClient } from "@/lib/supabaseClient";
 import { templatesConfig } from '../templates/TemplateManager';
@@ -34,6 +35,8 @@ import Projects from './Projects';
 import KeyAchievements from './KeyAchievements';
 import CustomSection from './CustomSection';
 import { motion, AnimatePresence } from "framer-motion";
+import Cropper from 'react-easy-crop';
+import getCroppedImg from '../utils/cropImage';
 import { useAnalytics } from "@/lib/analytics";
 import { CircleDoodle, UnderlineDoodle, SparkleDoodle, ScribbleDoodle, StarDoodle } from '@/components/landing-redesign/DoodleAnimations';
 import SuccessStep from './SuccessStep';
@@ -263,6 +266,14 @@ export default function FormPanel({ data, setData, templateId, onChangeTemplate,
     const [userId, setUserId] = useState(null);
     const [headerErrors, setHeaderErrors] = useState({});
     const [isExplorerLoading, setIsExplorerLoading] = useState(false);
+    
+    // Photo Cropping State
+    const [tempPhoto, setTempPhoto] = useState(null);
+    const [isCropping, setIsCropping] = useState(false);
+    const [crop, setCrop] = useState({ x: 0, y: 0 });
+    const [zoom, setZoom] = useState(1);
+    const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+    const [selectedShape, setSelectedShape] = useState('original');
 
     // Smart Intelligence State
     const [suggestedTitles, setSuggestedTitles] = useState([]);
@@ -1052,12 +1063,42 @@ export default function FormPanel({ data, setData, templateId, onChangeTemplate,
         if (file) {
             const reader = new FileReader();
             reader.onloadend = () => {
-                setData(prev => ({
-                    ...prev,
-                    personal: { ...(prev.personal || {}), photo: reader.result }
-                }));
+                setTempPhoto(reader.result);
+                setIsCropping(true);
             };
             reader.readAsDataURL(file);
+            e.target.value = ''; // Reset file input so the same file can be uploaded again
+        }
+    };
+
+    const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
+        setCroppedAreaPixels(croppedAreaPixels);
+    }, []);
+
+    const showCroppedImage = async () => {
+        try {
+            const croppedImage = await getCroppedImg(tempPhoto, croppedAreaPixels, 0, { horizontal: false, vertical: false }, selectedShape);
+            setData(prev => ({
+                ...prev,
+                personal: { 
+                    ...(prev.personal || {}), 
+                    photo: croppedImage,
+                    originalPhoto: tempPhoto, // Store original for "un-cropping"
+                    photoShape: selectedShape // Store shape for persistence
+                }
+            }));
+            setIsCropping(false);
+            setTempPhoto(null);
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    const handleUncrop = () => {
+        if (data.personal?.originalPhoto) {
+            setTempPhoto(data.personal.originalPhoto);
+            setSelectedShape(data.personal.photoShape || 'original');
+            setIsCropping(true);
         }
     };
 
@@ -1656,23 +1697,43 @@ export default function FormPanel({ data, setData, templateId, onChangeTemplate,
                                     </button>
                                     <input type="file" ref={fileInputRef} hidden onChange={handleImageUpload} accept="image/*" />
                                     {data.personal?.photo && (
-                                        <button
-                                            onClick={() => setData(prev => ({ ...prev, personal: { ...prev.personal, photo: '' } }))}
-                                            style={{
-                                                marginTop: '12px',
-                                                color: '#ef4444',
-                                                fontSize: '11px',
-                                                fontWeight: 700,
-                                                background: 'none',
-                                                border: 'none',
-                                                cursor: 'pointer',
-                                                display: 'block',
-                                                width: '100%',
-                                                textAlign: 'center'
-                                            }}
-                                        >
-                                            Remove
-                                        </button>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '12px' }}>
+                                            <button
+                                                onClick={handleUncrop}
+                                                style={{
+                                                    color: 'var(--gap-primary)',
+                                                    fontSize: '11px',
+                                                    fontWeight: 700,
+                                                    background: 'rgba(59, 130, 246, 0.05)',
+                                                    border: '1px solid rgba(59, 130, 246, 0.2)',
+                                                    borderRadius: '6px',
+                                                    padding: '6px 0',
+                                                    cursor: 'pointer',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    gap: '6px'
+                                                }}
+                                            >
+                                                <Maximize2 size={12} /> Crop / Adjust
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    setData(prev => ({ ...prev, personal: { ...prev.personal, photo: '', originalPhoto: '' } }));
+                                                    if (fileInputRef.current) fileInputRef.current.value = '';
+                                                }}
+                                                style={{
+                                                    color: '#ef4444',
+                                                    fontSize: '11px',
+                                                    fontWeight: 600,
+                                                    background: 'none',
+                                                    border: 'none',
+                                                    cursor: 'pointer',
+                                                }}
+                                            >
+                                                Remove Photo
+                                            </button>
+                                        </div>
                                     )}
                                 </div>
 
@@ -2304,20 +2365,12 @@ export default function FormPanel({ data, setData, templateId, onChangeTemplate,
                 <AnimatePresence>
                     {isDraftExplorerOpen && (
                         <DraftExplorer
-                            isOpen={isDraftExplorerOpen}
-                            onClose={() => setIsDraftExplorerOpen(false)}
                             drafts={drafts}
-                            currentResumeId={resumeId}
-                            isMobile={isMobile}
-                            onSelectDraft={(d) => {
-                                setIsSwitching(true);
-                                if (isMobile) setIsMobileMenuOpen(false);
-                                onSwitchProject(d);
-                                setIsDraftExplorerOpen(false);
-                            }}
-                            onRenameDraft={handleRenameDraft}
-                            onDeleteDraft={handleDeleteDraft}
-                            onStartNew={() => window.location.href = '/resumy/resume-creator?step=initial'}
+                            onClose={() => setIsDraftExplorerOpen(false)}
+                            onSwitch={onSwitchProject}
+                            onRename={handleRenameDraft}
+                            onDelete={handleDeleteDraft}
+                            currentId={resumeId}
                         />
                     )}
                 </AnimatePresence>
@@ -2657,6 +2710,137 @@ export default function FormPanel({ data, setData, templateId, onChangeTemplate,
                         }}
                     />
                 )}
+                {/* Premium Photo Cropping Modal */}
+                <AnimatePresence>
+                    {isCropping && (
+                        <motion.div 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            style={{
+                                position: 'fixed',
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                backgroundColor: 'rgba(0, 0, 0, 0.85)',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                zIndex: 9999,
+                                padding: isMobile ? '20px' : '40px',
+                                backdropFilter: 'blur(8px)'
+                            }}
+                        >
+                            <motion.div 
+                                initial={{ scale: 0.9, y: 20 }}
+                                animate={{ scale: 1, y: 0 }}
+                                className="bg-white rounded-[32px] overflow-hidden shadow-2xl flex flex-col"
+                                style={{
+                                    width: '100%',
+                                    maxWidth: '600px',
+                                    height: isMobile ? '80vh' : '700px',
+                                    position: 'relative'
+                                }}
+                            >
+                                <div className="p-6 border-b border-stone-100 flex items-center justify-between bg-stone-50/50">
+                                    <div>
+                                        <h3 className="text-xl font-black text-stone-900 tracking-tight">Premium Photo Editor</h3>
+                                        <p className="text-xs font-bold text-stone-400 uppercase tracking-widest mt-1">Refine your professional appearance</p>
+                                    </div>
+                                    <button 
+                                        onClick={() => { setIsCropping(false); setTempPhoto(null); }}
+                                        className="p-2 hover:bg-stone-100 rounded-full transition-colors"
+                                    >
+                                        <X size={20} />
+                                    </button>
+                                </div>
+
+                                <div className="flex-1 relative bg-stone-900">
+                                    <Cropper
+                                        image={tempPhoto}
+                                        crop={crop}
+                                        zoom={zoom}
+                                        aspect={1} // Square crop for profile photos
+                                        onCropChange={setCrop}
+                                        onCropComplete={onCropComplete}
+                                        onZoomChange={setZoom}
+                                        cropShape={selectedShape === 'circle' ? 'round' : 'rect'}
+                                        showGrid={false}
+                                        restrictPosition={false}
+                                    />
+                                </div>
+
+                                <div className="p-8 bg-white space-y-8">
+                                    <div className="space-y-4">
+                                        <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest block mb-3">Frame Style</span>
+                                        <div className="flex gap-3 overflow-x-auto pb-2 custom-scrollbar">
+                                            {[
+                                                { id: 'original', label: 'Square', icon: Square },
+                                                { id: 'circle', label: 'Circle', icon: Circle },
+                                                { id: 'rounded', label: 'Rounded', icon: Layout },
+                                                { id: 'hexagon', label: 'Hexagon', icon: Hexagon },
+                                                { id: 'diamond', label: 'Diamond', icon: Diamond }
+                                            ].map(s => (
+                                                <button
+                                                    key={s.id}
+                                                    onClick={() => setSelectedShape(s.id)}
+                                                    className={`px-4 py-2.5 rounded-xl border-2 transition-all flex items-center gap-2 flex-shrink-0 ${
+                                                        selectedShape === s.id 
+                                                        ? 'border-violet-600 bg-violet-50 text-violet-700 shadow-sm' 
+                                                        : 'border-stone-100 bg-white text-stone-500 hover:border-stone-200'
+                                                    }`}
+                                                >
+                                                    <s.icon size={14} fill={selectedShape === s.id ? 'currentColor' : 'none'} fillOpacity={selectedShape === s.id ? 0.1 : 0} />
+                                                    <span className="text-[11px] font-bold">{s.label}</span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest flex items-center gap-2">
+                                                <Maximize2 size={12} /> Zoom Level
+                                            </span>
+                                            <span className="text-sm font-bold text-violet-600 bg-violet-50 px-2 py-0.5 rounded-full">{Math.round(zoom * 100)}%</span>
+                                        </div>
+                                        <input
+                                            type="range"
+                                            value={zoom}
+                                            min={1}
+                                            max={3}
+                                            step={0.1}
+                                            aria-labelledby="Zoom"
+                                            onChange={(e) => setZoom(parseFloat(e.target.value))}
+                                            className="w-full h-2 bg-stone-100 rounded-lg appearance-none cursor-pointer accent-violet-600"
+                                        />
+                                    </div>
+
+                                    <div className="flex gap-4">
+                                        <button
+                                            onClick={() => { setIsCropping(false); setTempPhoto(null); }}
+                                            className="flex-1 px-6 py-4 rounded-2xl border-2 border-stone-100 text-stone-600 font-bold hover:bg-stone-50 transition-all active:scale-95"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            onClick={showCroppedImage}
+                                            className="flex-[2] px-6 py-4 rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-700 text-white font-bold shadow-xl shadow-violet-200 hover:shadow-violet-300 transition-all hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-3"
+                                        >
+                                            <Sparkles size={18} fill="currentColor" /> Save Changes
+                                        </button>
+                                    </div>
+                                    
+                                    <p className="text-center text-[10px] font-bold text-stone-400 uppercase tracking-widest">
+                                        <ShieldCheck size={10} className="inline mr-1 text-emerald-500" /> AI-Enhanced Processing Active
+                                    </p>
+                                </div>
+                            </motion.div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
         </div>
     );

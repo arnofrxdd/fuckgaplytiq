@@ -39,6 +39,8 @@ const AzureExecutive = dynamic(() => import("./AzureExecutive/AzureExecutive"), 
 const AmberElite = dynamic(() => import("./AmberElite/AmberElite"), { ssr: false });
 const AcademicLatex = dynamic(() => import("./AcademicLatex/AcademicLatex"), { ssr: false });
 const AcademicTwoColumn = dynamic(() => import("./AcademicTwoColumn/AcademicTwoColumn"), { ssr: false });
+const SlateClassic = dynamic(() => import("./SlateClassic/SlateClassic"), { ssr: false });
+
 
 
 const TEMPLATE_COMPONENTS = {
@@ -77,6 +79,8 @@ const TEMPLATE_COMPONENTS = {
     "amber-elite": AmberElite,
     "academic-latex": AcademicLatex,
     "academic-two-column": AcademicTwoColumn,
+    "slate-classic": SlateClassic,
+
 
 };
 

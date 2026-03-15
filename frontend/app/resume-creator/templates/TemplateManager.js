@@ -683,6 +683,23 @@ export const templatesConfig = [
     },
     defaults: { fontSize: 1, fontFamily: "Inter", sectionSpacing: 1, paragraphSpacing: 1, lineHeight: 1.5, letterSpacing: 0, pageMargin: 40 },
     useRootPadding: false
+  },
+  {
+    id: "slate-classic",
+    name: "Slate Classic",
+    thumbnail: "/templates/placeholder.png",
+    description: "A professional 1-column layout with a slate color palette and clean typography.",
+    tags: ["1-Column", "Slate", "Classic", "Professional"],
+    defaultColor: "#334155",
+    defaultFont: "'Inter', sans-serif",
+    recommendedColors: ["#334155", "#475569", "#1e293b", "#0f172a"],
+    theme: { background: "#ffffff", text: "#334155" },
+    layout: {
+      sidebar: ["summary", "contact", "personalDetails", "websites", "skills", "strengths", "additionalSkills", "languages", "software", "interests", "affiliations", "additionalInfo"],
+      main: ["experience", "education", "projects", "certifications", "awards", "volunteering", "publications", "references", "custom"]
+    },
+    defaults: { fontSize: 1, fontFamily: "Inter", sectionSpacing: 1, paragraphSpacing: 1, lineHeight: 1.6, letterSpacing: 0, pageMargin: 40 },
+    useRootPadding: false
   }
 ];
 
