@@ -18,7 +18,9 @@ import {
     CheckCircle2,
     Briefcase,
     Zap,
-    TrendingUp
+    TrendingUp,
+    Info,
+    X
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/lib/authContext'
@@ -51,6 +53,12 @@ export default function DashboardPage() {
     const [searchQuery, setSearchQuery] = useState('')
     const [showUserMenu, setShowUserMenu] = useState(false)
     const [deletingId, setDeletingId] = useState<string | null>(null)
+    const [toast, setToast] = useState<{ message: string, type: 'error' | 'success' } | null>(null);
+
+    const showToast = (message: string, type: 'error' | 'success' = 'error') => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 4000);
+    };
 
     const API_URL = '/resumy';
 
@@ -112,9 +120,10 @@ export default function DashboardPage() {
 
             if (error) throw error;
             setDrafts(drafts.filter(d => d.id !== id))
+            showToast('Draft deleted successfully', 'success')
         } catch (error) {
             console.error('Error deleting draft:', error)
-            alert('Failed to delete draft')
+            showToast('Failed to delete draft', 'error')
         } finally {
             setDeletingId(null)
         }
@@ -201,6 +210,28 @@ export default function DashboardPage() {
                 </div>
             </header>
 
+            {/* UI MESSAGING (TOAST) */}
+            <AnimatePresence>
+                {toast && (
+                    <motion.div 
+                        initial={{ y: 50, opacity: 0, scale: 0.9 }}
+                        animate={{ y: 0, opacity: 1, scale: 1 }}
+                        exit={{ y: 20, opacity: 0, scale: 0.9 }}
+                        className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[11000] flex items-center gap-3 bg-slate-900 text-white px-6 py-4 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-white/10 min-w-[320px]"
+                    >
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${toast.type === 'error' ? 'bg-red-500/20 text-red-400' : 'bg-emerald-500/20 text-emerald-400'}`}>
+                            {toast.type === 'error' ? <Info size={20} /> : <CheckCircle2 size={20} />}
+                        </div>
+                        <div className="flex-1">
+                            <p className="text-sm font-bold leading-tight">{toast.message}</p>
+                        </div>
+                        <button onClick={() => setToast(null)} className="text-white/40 hover:text-white transition-colors">
+                            <X size={18} />
+                        </button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             {/* Stats */}
             <div className="stats-grid">
                 <motion.div 
@@ -261,7 +292,13 @@ export default function DashboardPage() {
                         className="create-card"
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        onClick={() => router.push('/resume-creator')}
+                        onClick={() => {
+                            if (drafts.length >= 3) {
+                                showToast("You've reached the limit of 3 drafts. Please delete an existing draft to start a new one!", 'error');
+                                return;
+                            }
+                            router.push('/resume-creator');
+                        }}
                     >
                         <div className="create-icon">
                             <Plus className="w-8 h-8" />

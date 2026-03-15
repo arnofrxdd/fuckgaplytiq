@@ -226,6 +226,13 @@ export default function FormPanel({ data, setData, templateId, onChangeTemplate,
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const [navTarget, setNavTarget] = useState(null);
     const [isSaving, setIsSaving] = useState(false);
+    const [toast, setToast] = useState(null); // { message: string, type: 'error' | 'success' | 'info' }
+
+    const showToast = (message, type = 'error') => {
+        setToast({ message, type });
+        // Auto-hide after 4 seconds
+        setTimeout(() => setToast(null), 4000);
+    };
 
     // Track changes for exit warning
     useEffect(() => {
@@ -457,8 +464,8 @@ export default function FormPanel({ data, setData, templateId, onChangeTemplate,
                     .select('*', { count: 'exact', head: true })
                     .eq('profile_id', userData.user.id);
 
-                if (!countError && count >= 5) {
-                    alert("You have reached the maximum limit of 5 drafts. Please delete an existing draft to create a new one.");
+                if (!countError && count >= 3) {
+                    showToast("You have reached the maximum limit of 3 drafts. Please delete an existing draft to create a new one.");
                     setIsSwitching(false);
                     isInitializing.current = false;
                     window.location.href = '/resumy/resume-creator'; // Prevent form render, send back to hub
@@ -2165,6 +2172,27 @@ export default function FormPanel({ data, setData, templateId, onChangeTemplate,
 
     return (
         <div className="form-panel-root-container" style={{ position: 'relative', width: '100%', height: '100vh', display: 'flex', flexDirection: 'column' }}>
+            {/* UI MESSAGING (TOAST) */}
+            <AnimatePresence>
+                {toast && (
+                    <motion.div 
+                        initial={{ y: 50, opacity: 0, scale: 0.9 }}
+                        animate={{ y: 0, opacity: 1, scale: 1 }}
+                        exit={{ y: 20, opacity: 0, scale: 0.9 }}
+                        className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[11000] flex items-center gap-3 bg-stone-900 text-white px-6 py-4 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-white/10 min-w-[320px]"
+                    >
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${toast.type === 'error' ? 'bg-red-500/20 text-red-400' : 'bg-emerald-500/20 text-emerald-400'}`}>
+                            {toast.type === 'error' ? <AlertCircle size={20} /> : <CheckCircle2 size={20} />}
+                        </div>
+                        <div className="flex-1">
+                            <p className="text-sm font-bold leading-tight">{toast.message}</p>
+                        </div>
+                        <button onClick={() => setToast(null)} className="text-white/40 hover:text-white transition-colors">
+                            <X size={18} />
+                        </button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
             <AnimatePresence>
                 {(isSwitching || !isLoadedFromDB) && (
                     <div style={{ position: 'fixed', inset: 0, zIndex: 9999 }}>
@@ -2297,8 +2325,8 @@ export default function FormPanel({ data, setData, templateId, onChangeTemplate,
 
 
                 {isFullScreenStep ? (
-                    <div key={resumeId} style={isQuickEdit ? { width: '100%', minHeight: '100vh', overflowY: 'auto', background: '#ffffff', padding: '60px 20px' } : { width: '100%', minHeight: '100vh', background: '#ffffff' }}>
-                        <div style={isFullScreenStep ? { width: '100%', height: '100%' } : { maxWidth: 1000, margin: '0 auto' }}>
+                    <div key={resumeId} style={{ width: '100%', minHeight: '100vh', background: '#ffffff' }}>
+                        <div style={{ width: '100%', height: '100%' }}>
                             {renderStep()}
                         </div>
                     </div>
@@ -2375,6 +2403,7 @@ export default function FormPanel({ data, setData, templateId, onChangeTemplate,
                                                         const isVisited = data.visitedSteps?.includes(s.id);
                                                         if (isVisited || isActive || isCompleted) {
                                                             setStep(s.id);
+                                                            setIsQuickEdit(false);
                                                             if (isMobile) setIsMobileMenuOpen(false);
                                                         }
                                                     }}

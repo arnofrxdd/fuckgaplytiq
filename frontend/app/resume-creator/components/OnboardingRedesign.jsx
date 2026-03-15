@@ -178,6 +178,13 @@ export default function OnboardingRedesign({ onComplete, onBack, mode = "new", d
     const [deleteConfirmId, setDeleteConfirmId] = useState(null);
     const [studentName, setStudentName] = useState("");
     const [uploadError, setUploadError] = useState(null);
+    const [toast, setToast] = useState(null); // { message: string, type: 'error' | 'success' | 'info' }
+
+    const showToast = (message, type = 'error') => {
+        setToast({ message, type });
+        // Auto-hide after 4 seconds
+        setTimeout(() => setToast(null), 4000);
+    };
 
     const fileInputRef = useRef(null);
     const dropdownRef = useRef(null);
@@ -351,6 +358,14 @@ export default function OnboardingRedesign({ onComplete, onBack, mode = "new", d
         setDirection(1);
         setStep(next);
         trackEvent(`resume_funnel_${next}`, `Moved to ${next}`);
+    };
+
+    const handleStartBuilding = () => {
+        if (drafts.length >= 3) {
+            showToast("You've reached the limit of 3 drafts. Please delete an existing draft to start a new one!");
+            return;
+        }
+        nextStep(STEPS.SOURCE_CHOICE);
     };
 
     const performWithAuth = (action) => {
@@ -549,6 +564,10 @@ export default function OnboardingRedesign({ onComplete, onBack, mode = "new", d
     };
 
     const handleTemplateSelectedFromGallery = (templateId) => {
+        if (drafts.length >= 3) {
+            showToast("You've reached the limit of 3 drafts. Please delete an existing draft to start a new one!");
+            return;
+        }
         setSelectedTemplate(templateId);
         nextStep(STEPS.SOURCE_CHOICE);
     };
@@ -563,10 +582,64 @@ export default function OnboardingRedesign({ onComplete, onBack, mode = "new", d
 
     return (
         <div className={`onboarding-redesign ${isExiting ? 'exiting' : ''}`}>
-            {/* BACKGROUND ELEMENTS FROM OLD ONBOARDING */}
-            <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[100%] bg-emerald-100/30 blur-[100px] rounded-none pointer-events-none" />
-            <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[80%] bg-orange-50/40 blur-[100px] rounded-none pointer-events-none" />
-            <div className="grid-overlay" style={{ backgroundImage: 'radial-gradient(circle, #10B981 1px, transparent 1px)', backgroundSize: '32px 32px', opacity: 0.1, position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none' }} />
+            {/* UI MESSAGING (TOAST) */}
+            <AnimatePresence>
+                {toast && (
+                    <motion.div 
+                        initial={{ y: 50, opacity: 0, scale: 0.9 }}
+                        animate={{ y: 0, opacity: 1, scale: 1 }}
+                        exit={{ y: 20, opacity: 0, scale: 0.9 }}
+                        className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[11000] flex items-center gap-3 bg-stone-900 text-white px-6 py-4 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-white/10 min-w-[320px]"
+                    >
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${toast.type === 'error' ? 'bg-red-500/20 text-red-400' : 'bg-emerald-500/20 text-emerald-400'}`}>
+                            {toast.type === 'error' ? <Info size={20} /> : <CheckCircle2 size={20} />}
+                        </div>
+                        <div className="flex-1">
+                            <p className="text-sm font-bold leading-tight">{toast.message}</p>
+                        </div>
+                        <button onClick={() => setToast(null)} className="text-white/40 hover:text-white transition-colors">
+                            <X size={18} />
+                        </button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* PREMIUM BACKGROUND SYSTEM */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ zIndex: 0 }}>
+                {/* Main Ambient Glows */}
+                <motion.div 
+                    animate={{ 
+                        scale: [1, 1.2, 1],
+                        rotate: [0, 45, 0],
+                        opacity: [0.15, 0.25, 0.15]
+                    }}
+                    transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+                    className="absolute top-[-20%] right-[-10%] w-[70%] h-[70%] bg-indigo-200/40 blur-[120px] rounded-full"
+                />
+                <motion.div 
+                    animate={{ 
+                        scale: [1, 1.1, 1],
+                        x: [0, 50, 0],
+                        opacity: [0.2, 0.3, 0.2]
+                    }}
+                    transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+                    className="absolute bottom-[-10%] left-[-10%] w-[60%] h-[60%] bg-violet-100/50 blur-[100px] rounded-full"
+                />
+                
+                {/* Accent Highlight behind content */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.8)_0%,transparent_100%)] z-1" />
+
+                {/* Refined Dot Grid */}
+                <div 
+                    className="absolute inset-0" 
+                    style={{ 
+                        backgroundImage: 'radial-gradient(#6366f1 1px, transparent 1px)', 
+                        backgroundSize: '40px 40px', 
+                        opacity: 0.04,
+                        maskImage: 'radial-gradient(circle at center, black, transparent 80%)'
+                    }} 
+                />
+            </div>
 
 
 
@@ -738,12 +811,15 @@ export default function OnboardingRedesign({ onComplete, onBack, mode = "new", d
                                         )}
                                     </p>
                                     <div className="welcome-actions">
-                                        <button className="main-cta group" onClick={() => nextStep(STEPS.SOURCE_CHOICE)}>
+                                        <button className="main-cta group" onClick={handleStartBuilding}>
                                             Start Building <ArrowRight className="transition-transform group-hover:translate-x-1" />
                                         </button>
                                         {drafts.length > 0 && (
-                                            <button className="secondary-cta hover:border-violet-600 hover:text-violet-600 transition-all active:scale-95" onClick={() => nextStep(STEPS.PROJECTS)}>
+                                            <button className="secondary-cta hover:border-violet-600 hover:text-violet-600 transition-all active:scale-95 group relative" onClick={() => nextStep(STEPS.PROJECTS)}>
                                                 Saved Drafts <Layout size={18} />
+                                                {drafts.length >= 3 && (
+                                                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-tighter shadow-sm">Full</span>
+                                                )}
                                             </button>
                                         )}
                                     </div>
@@ -806,8 +882,8 @@ export default function OnboardingRedesign({ onComplete, onBack, mode = "new", d
                                             whileTap={{ scale: 0.98 }}
                                             className="choice-premium-card colored-dna-premium group"
                                             onClick={() => {
-                                                if (drafts.length >= 5) {
-                                                    alert("Draft limit reached! You can have a maximum of 5 drafts. Please delete an existing draft.");
+                                                if (drafts.length >= 3) {
+                                                    showToast("Draft limit reached! You can have a maximum of 3 drafts. Please delete an existing draft.");
                                                     return;
                                                 }
                                                 performWithAuth(() => {
@@ -838,8 +914,8 @@ export default function OnboardingRedesign({ onComplete, onBack, mode = "new", d
                                         className={`choice-premium-card colored-ai-premium group ${(aiImportStatus === 'unavailable' || aiImportStatus === 'limitReached') ? 'ai-card-unavailable' : ''}`}
                                         onClick={() => {
                                             if (aiImportStatus === 'unavailable' || aiImportStatus === 'limitReached') return;
-                                            if (drafts.length >= 5) {
-                                                alert("Draft limit reached! You can have a maximum of 5 drafts. Please delete an existing draft.");
+                                            if (drafts.length >= 3) {
+                                                showToast("Draft limit reached! You can have a maximum of 3 drafts. Please delete an existing draft.");
                                                 return;
                                             }
                                             performWithAuth(() => {
@@ -920,8 +996,8 @@ export default function OnboardingRedesign({ onComplete, onBack, mode = "new", d
                                         whileTap={{ scale: 0.98 }}
                                         className="choice-classic-card group"
                                         onClick={() => {
-                                            if (drafts.length >= 5) {
-                                                alert("Draft limit reached! You can have a maximum of 5 drafts. Please delete an existing draft.");
+                                            if (drafts.length >= 3) {
+                                                showToast("Draft limit reached! You can have a maximum of 3 drafts. Please delete an existing draft.");
                                                 return;
                                             }
                                             setNextStepAfterTitle('COMPLETE');
@@ -1039,6 +1115,10 @@ export default function OnboardingRedesign({ onComplete, onBack, mode = "new", d
 
                                 <div className="drafts-grid">
                                     <div className="new-draft-card" onClick={() => {
+                                        if (drafts.length >= 3) {
+                                            showToast("Draft limit reached! You can have a maximum of 3 drafts. Please delete an existing draft from your projects to start a new one.");
+                                            return;
+                                        }
                                         setHasNamedProject(false);
                                         setProjectTitle("Untitled Resume");
                                         nextStep(STEPS.SOURCE_CHOICE);

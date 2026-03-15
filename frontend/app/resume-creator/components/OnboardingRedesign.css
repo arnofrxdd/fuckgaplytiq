@@ -21,6 +21,11 @@
     z-index: 1000;
     overflow: hidden;
     transition: opacity 0.4s ease-out;
+    box-sizing: border-box;
+}
+
+.onboarding-redesign *, .onboarding-redesign *::before, .onboarding-redesign *::after {
+    box-sizing: border-box;
 }
 
 .onboarding-redesign.exiting {
@@ -85,16 +90,18 @@
         height: 100% !important;
         overflow-y: auto !important;
         overflow-x: hidden !important;
-        display: block !important;
+        display: flex !important;
+        flex-direction: column !important;
         -webkit-overflow-scrolling: touch !important;
     }
 
     .step-wrapper {
-        padding: 12px 20px 100px !important;
+        padding: 12px 20px 20px !important;
         flex: 1 !important;
-        min-height: 0 !important;
         display: flex !important;
         flex-direction: column !important;
+        justify-content: center !important; /* Centering content vertically to avoid bottom gap */
+        min-height: min-content !important;
     }
 
     /* Welcome Step Mobile — full redesign */
@@ -103,9 +110,10 @@
         flex-direction: column !important;
         gap: 0 !important;
         text-align: center !important;
-        min-height: calc(100dvh - 56px) !important;
+        min-height: 0 !important;
         overflow: visible !important;
-        padding-bottom: 40px !important;
+        padding-bottom: 0 !important;
+        margin: auto 0 !important; /* Help centering */
     }
 
     .welcome-content {
@@ -159,9 +167,9 @@
         justify-content: center !important;
         align-items: center !important;
         order: 1 !important;
-        min-height: 40vh !important;
+        min-height: 30vh !important;
         flex-shrink: 0 !important;
-        padding: 0 0 20px 0 !important;
+        padding: 0 0 10px 0 !important;
         overflow: visible !important;
     }
 
@@ -196,6 +204,11 @@
 
 
     .hero-art-bg {
+        display: none !important;
+    }
+
+    /* Hide FAQ on mobile */
+    .faq-section {
         display: none !important;
     }
 
@@ -758,6 +771,7 @@
     /* Header Height */
     position: relative;
     scroll-behavior: smooth;
+    /* Note: No z-index here to prevent trapping fixed modals in a stacking context */
 }
 
 .step-wrapper {
@@ -1400,11 +1414,6 @@
 
 .welcome-preview {
     overflow: visible !important;
-}
-
-.onboarding-main {
-    z-index: 10;
-    /* Ensure main content is above background arts */
 }
 
 .preview-container-mock {

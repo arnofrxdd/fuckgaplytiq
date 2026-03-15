@@ -734,7 +734,7 @@ export default function PremiumTemplateSelection({
                 <AnimatePresence>
                     {isPreviewModalOpen && selectedTemplateObj && (
                         <motion.div
-                            className="fixed inset-0 z-[11100] flex items-center justify-center bg-stone-900/60 backdrop-blur-md p-6"
+                            className="fixed inset-0 z-[100000] flex items-center justify-center bg-stone-900/60 backdrop-blur-md p-6"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
@@ -749,7 +749,7 @@ export default function PremiumTemplateSelection({
                                 {/* CLOSE BUTTON */}
                                 <button
                                     onClick={() => setIsPreviewModalOpen(false)}
-                                    className="absolute top-8 right-8 z-[210] w-12 h-12 bg-white rounded flex items-center justify-center text-slate-400 hover:text-slate-900 border border-slate-100 transition-all shadow-sm hover:scale-110 active:scale-95"
+                                    className="absolute top-8 right-8 z-[100001] w-12 h-12 bg-white rounded flex items-center justify-center text-slate-400 hover:text-slate-900 border border-slate-100 transition-all shadow-sm hover:scale-110 active:scale-95"
                                 >
                                     <X size={24} />
                                 </button>

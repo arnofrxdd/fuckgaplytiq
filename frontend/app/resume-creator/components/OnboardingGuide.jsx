@@ -107,7 +107,7 @@ export default function OnboardingGuide({ isMobile, resumeId, scene = 'editor', 
         if (metadata && !isVisible) {
             if (scene === 'editor' && !metadata.editor_tour_completed) {
                 setTimeout(() => setIsVisible(true), 1500);
-            } else if (scene === 'finalize' && metadata.finalize_tour_step < steps.length) {
+            } else if (scene === 'finalize' && (metadata.finalize_tour_step === undefined || metadata.finalize_tour_step < steps.length)) {
                 setCurrentStep(metadata.finalize_tour_step || 0);
                 setTimeout(() => setIsVisible(true), 1500);
             }
