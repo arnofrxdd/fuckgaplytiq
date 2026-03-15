@@ -197,20 +197,7 @@ const CreativeMarketing = ({
             color: "var(--theme-color, #2d5a7b)",
             width: "60px",
         },
-        photoContainer: {
-            display: "flex",
-            justifyContent: "flex-end",
-            marginBottom: "25px",
-            paddingRight: "5px",
-        },
-        photo: {
-            width: "110px",
-            height: "110px",
-            borderRadius: "50%",
-            objectFit: "cover",
-            border: "8px solid #ffffff",
-            boxShadow: "0 0 0 1px #e2e8f0, 0 4px 12px rgba(0,0,0,0.08)",
-        }
+
     };
 
     const Header = () => (
@@ -1134,7 +1121,7 @@ const CreativeMarketing = ({
                 <Header />
                 <div style={styles.layoutBody}>
                     <div data-column-id="left" style={styles.leftColumn}>
-                        {personal?.photo && <div style={styles.photoContainer}><img src={personal.photo} style={styles.photo} alt="profile" /></div>}
+
                         {activeLeftSections.map(sid => (
                             <div key={sid} style={{ paddingBottom: "1px" }}>
                                 <SectionRenderer sectionId={sid} data={data} customRenderers={customRenderers} zoneId="left" />
@@ -1164,7 +1151,7 @@ const CreativeMarketing = ({
                                 {i === 0 && <Header />}
                                 <div style={{ ...styles.layoutBody, flex: 1, minHeight: 0 }}>
                                     <div style={styles.leftColumn}>
-                                        {i === 0 && personal?.photo && <div style={styles.photoContainer}><img src={personal.photo} style={styles.photo} alt="profile" /></div>}
+
                                         {renderZone(`left-p${i}`, page.left, { display: "flex", flexDirection: "column", flex: 1, gap: "calc(35px * var(--theme-section-margin, 1))" })}
                                     </div>
                                     <div style={styles.rightColumn}>
@@ -1179,11 +1166,11 @@ const CreativeMarketing = ({
                             <Header />
                             <div style={styles.layoutBody}>
                                 <div style={styles.leftColumn}>
-                                    {personal?.photo && <div style={styles.photoContainer}><img src={personal.photo} style={styles.photo} alt="profile" /></div>}
+
                                     {renderZone('left', activeLeftSections, { display: "flex", flexDirection: "column", flex: 1, gap: "calc(35px * var(--theme-section-margin, 1))" })}
                                 </div>
                                 <div style={styles.rightColumn}>
-                                    {personal?.photo && !activeLeftSections.includes('personalDetails') && <div style={styles.photoContainer}><img src={personal.photo} style={styles.photo} alt="profile" /></div>}
+
                                     {renderZone('right', activeRightSections, { display: "flex", flexDirection: "column", flex: 1, gap: "calc(35px * var(--theme-section-margin, 1))" })}
                                 </div>
                             </div>

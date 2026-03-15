@@ -258,26 +258,7 @@ const JadeHeritage = ({
             flexShrink: 0,
             fontWeight: "700",
         },
-        headerPhoto: {
-            position: "absolute",
-            top: "16px",
-            right: "24px",
-            width: "76px",
-            height: "76px",
-            borderRadius: "50%",
-            objectFit: "cover",
-            border: `3px solid ${teal}`,
-        },
-        headerPhotoPlaceholder: {
-            position: "absolute",
-            top: "16px",
-            right: "24px",
-            width: "76px",
-            height: "76px",
-            borderRadius: "50%",
-            background: "rgba(44,191,173,0.1)",
-            border: `3px solid ${teal}`,
-        },
+
         body: {
             padding: "16px 24px 24px 28px",
             flex: 1,
@@ -421,12 +402,7 @@ const JadeHeritage = ({
         return (
             <SectionWrapper sectionId="personal" onSectionClick={onSectionClick} isInteractive={isInteractive} label="Header">
                 <div style={styles.header}>
-                    {personal?.photo ? (
-                        <img src={personal.photo} alt="Profile" style={styles.headerPhoto} />
-                    ) : (
-                        <div style={styles.headerPhotoPlaceholder} />
-                    )}
-                    <div style={{ paddingRight: "96px" }}>
+                    <div>
                         <div style={styles.name}>
                             <SpellCheckText text={personal?.name || "YOUR NAME"} isActive={isSpellCheckActive} onIgnore={onSpellCheckIgnore} onReplace={(val) => onSpellCheckReplace('personal', 'name', val)} />
                         </div>
