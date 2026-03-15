@@ -139,12 +139,19 @@ const reformatResumeData = (parsedData, resumeId = null) => {
     };
 };
 
-export default function OnboardingRedesign({ onComplete, onBack, mode = "new", data = {}, onUpdateData }) {
+export default function OnboardingRedesign({ onComplete, onBack, mode = "new", data = {}, onUpdateData, onModeChange, flow, importId }) {
     const { trackEvent } = useAnalytics();
     const { userId, userEmail, isAuthenticated } = useAuth();
 
     // Navigation State
-    const [step, setStep] = useState(STEPS.WELCOME);
+    const [step, setStep] = useState(() => {
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            const urlMode = params.get('mode');
+            if (urlMode && Object.values(STEPS).includes(urlMode)) return urlMode;
+        }
+        return mode && mode !== "welcome" ? mode : STEPS.WELCOME;
+    });
     const [stepBeforeLogin, setStepBeforeLogin] = useState(STEPS.WELCOME);
     const [pendingAction, setPendingAction] = useState(null);
     const [direction, setDirection] = useState(1);
@@ -158,7 +165,12 @@ export default function OnboardingRedesign({ onComplete, onBack, mode = "new", d
     const [loading, setLoading] = useState(false);
     const [loadingText, setLoadingText] = useState("");
     const [projectTitle, setProjectTitle] = useState("Untitled Resume");
-    const [nextStepAfterTitle, setNextStepAfterTitle] = useState(STEPS.SELECTION);
+    const [nextStepAfterTitle, setNextStepAfterTitle] = useState(() => {
+        if (flow === 'dna') return 'DNA';
+        if (flow === 'ai') return STEPS.SOURCE_SELECTION;
+        if (flow === 'manual') return 'COMPLETE';
+        return STEPS.SELECTION;
+    });
     const [hasNamedProject, setHasNamedProject] = useState(false);
     const [selectedTemplate, setSelectedTemplate] = useState(null);
     const [isSelectionMode, setIsSelectionMode] = useState(false);
@@ -250,13 +262,75 @@ export default function OnboardingRedesign({ onComplete, onBack, mode = "new", d
     useEffect(() => {
         if (typeof window !== 'undefined') {
             const params = new URLSearchParams(window.location.search);
-            if (params.get('step') === 'initial') {
+            const urlMode = params.get('mode');
+            const urlStep = params.get('step'); // 'initial' handler legacy
+
+            if (urlStep === 'initial' && step !== STEPS.SOURCE_CHOICE) {
                 setStep(STEPS.SOURCE_CHOICE);
-            } else if (mode === "improve") {
+            } else if (urlMode && Object.values(STEPS).includes(urlMode)) {
+                if (step !== urlMode) setStep(urlMode);
+            } else if (mode === "improve" && step !== STEPS.ANALYZE) {
                 setStep(STEPS.ANALYZE);
             }
         }
     }, [mode]);
+
+    // Sync internal step to parent mode/URL
+    useEffect(() => {
+        if (onModeChange && step !== mode) {
+            // Map internal state back to flow string for URL
+            let currentFlow = flow;
+            if (nextStepAfterTitle === 'DNA') currentFlow = 'dna';
+            else if (nextStepAfterTitle === STEPS.SOURCE_SELECTION) currentFlow = 'ai';
+            else if (nextStepAfterTitle === 'COMPLETE') currentFlow = 'manual';
+
+            onModeChange(step, { flow: currentFlow });
+        }
+    }, [step, nextStepAfterTitle]);
+
+    // --- RECOVERY LOGIC (Handle refresh on any step after Source Choice) ---
+    // 1. Recovery for Career DNA flow
+    useEffect(() => {
+        const isDataEmpty = !data.personal?.name && (!data.experience || data.experience.length === 0);
+        if (flow === 'dna' && careerDna?.career_dna && isDataEmpty && !loading) {
+            console.log("[Onboarding] Recovering Career DNA data...");
+            const parsedData = careerDna.career_dna;
+            const reformatted = reformatResumeData(parsedData, careerDna.master_resume_id);
+            if (onUpdateData) onUpdateData(reformatted);
+        }
+    }, [flow, careerDna, data, loading]);
+
+    // 2. Recovery for AI Import flow
+    useEffect(() => {
+        const isDataEmpty = !data.personal?.name && (!data.experience || data.experience.length === 0);
+        if (flow === 'ai' && importId && isDataEmpty && !loading) {
+            const recoverImport = async () => {
+                setLoading(true);
+                setLoadingText("Recovering AI Analysis...");
+                const backendUrl = '/resumy';
+                try {
+                    const { data: { session } } = await supabaseClient.auth.getSession();
+                    const token = session?.access_token;
+                    
+                    const statusRes = await fetch(`${backendUrl}/api/resumes/${importId}`, {
+                        headers: { "Authorization": `Bearer ${token}` }
+                    });
+                    if (statusRes.ok) {
+                        const resume = await statusRes.json();
+                        if (resume.status === 'completed' && resume.parsed_json) {
+                            const reformatted = reformatResumeData(resume.parsed_json, importId);
+                            if (onUpdateData) onUpdateData(reformatted);
+                        }
+                    }
+                } catch (e) {
+                    console.error("Recovery failed:", e);
+                } finally {
+                    setLoading(false);
+                }
+            };
+            recoverImport();
+        }
+    }, [flow, importId, data, loading]);
 
     // ── CENTRALIZED DATA LOADING (Prevents flashing or wrong steps) ──
     useEffect(() => {
@@ -547,6 +621,11 @@ export default function OnboardingRedesign({ onComplete, onBack, mode = "new", d
             setLoading(false);
             const reformatted = reformatResumeData(parsedData, resume_id);
             if (onUpdateData) onUpdateData(reformatted);
+            
+            // Explicitly sync flow=ai and importId to URL upon successful upload
+            if (onModeChange) {
+                onModeChange(STEPS.ANALYZE, { flow: 'ai', importId: resume_id });
+            }
             nextStep(STEPS.ANALYZE);
         } catch (error) {
             console.error(error);

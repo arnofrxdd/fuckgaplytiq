@@ -93,11 +93,14 @@ const MajesticPlum = ({
         sidebar: {
             width: "32%",
             background: sidebarBg,
-            padding: "var(--theme-page-margin, 40px) 25px",
+            paddingTop: "var(--theme-page-margin, 40px)",
+            paddingLeft: "var(--theme-page-margin, 25px)",
+            paddingRight: "var(--theme-page-margin, 25px)",
+            paddingBottom: "var(--theme-page-margin, 40px)",
             display: "flex",
             flexDirection: "column",
             gap: "25px",
-            minHeight: "297mm",
+            height: "100%",
             boxSizing: "border-box",
         },
         sidebarPhotoWrap: {
@@ -119,6 +122,7 @@ const MajesticPlum = ({
             color: accentColor,
             textTransform: "uppercase",
             letterSpacing: "calc(1.5px + var(--theme-letter-spacing, 0px))",
+            marginTop: "0",
             marginBottom: "8px",
         },
         sidebarDivider: {
@@ -175,11 +179,16 @@ const MajesticPlum = ({
         },
         headerBlock: {
             background: accentColor,
-            padding: "50px 40px",
+            paddingTop: "var(--theme-page-margin, 50px)",
+            paddingLeft: "var(--theme-page-margin, 40px)",
+            paddingRight: "var(--theme-page-margin, 40px)",
+            paddingBottom: "var(--theme-page-margin, 50px)",
             color: "white",
             marginBottom: "20px",
             position: "relative",
             zIndex: 1,
+            boxSizing: "border-box",
+            WebkitPrintColorAdjust: "exact",
         },
         name: {
             fontSize: "calc(36px * var(--theme-font-scale, 1))",
@@ -198,12 +207,16 @@ const MajesticPlum = ({
             fontWeight: "400",
         },
         mainContentPadding: {
-            padding: "0 var(--theme-page-margin, 40px) var(--theme-page-margin, 40px) var(--theme-page-margin, 40px)",
+            paddingTop: "0",
+            paddingLeft: "var(--theme-page-margin, 40px)",
+            paddingRight: "var(--theme-page-margin, 40px)",
+            paddingBottom: "var(--theme-page-margin, 40px)",
             display: "flex",
             flexDirection: "column",
             gap: "25px",
             position: "relative",
             zIndex: 1,
+            boxSizing: "border-box",
         },
         sectionTitleMain: {
             fontSize: "calc(16px * var(--theme-font-scale, 1))",
@@ -214,6 +227,7 @@ const MajesticPlum = ({
             display: "flex",
             alignItems: "center",
             gap: "12px",
+            marginTop: "0",
             marginBottom: "15px",
             background: "white", // To cover the timeline line behind the text
             position: "relative",
@@ -242,14 +256,25 @@ const MajesticPlum = ({
         },
         expDot: {
             position: "absolute",
-            left: "10px", // Perfectly centered on the 28px icon axis (14-4 = 10px)
-            top: "6px",
-            width: "8px",
-            height: "8px",
-            background: "#A0A0A0",
+            left: "8px",
+            top: "4px",
+            width: "12px",
+            height: "12px",
+            backgroundColor: "white",
+            border: "1.5px solid #A0A0A0",
             borderRadius: "50%",
-            border: "2px solid white",
-            zIndex: 2,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 5,
+            boxSizing: "border-box",
+        },
+        expDotInner: {
+            width: "6px",
+            height: "6px",
+            borderRadius: "50%",
+            backgroundColor: "#A0A0A0",
+            WebkitPrintColorAdjust: "exact",
         },
     };
 
@@ -648,7 +673,9 @@ const MajesticPlum = ({
                             const dateStr = exp.year || exp.date || (exp.startYear ? `${exp.startYear} - ${exp.isCurrent ? "Present" : exp.endYear}` : "");
                             return (
                                 <div key={i} data-item-index={originalIdx} style={styles.expItem}>
-                                    <div style={styles.expDot} />
+                                    <div style={styles.expDot}>
+                                        <div style={styles.expDotInner} />
+                                    </div>
                                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: "4px" }}>
                                         <div style={{ ...styles.expTitle, fontSize: "14px", fontWeight: "700" }}>
                                             <RichTextSpellCheck html={exp.title || exp.role || ""} isActive={isSpellCheckActive} onIgnore={onSpellCheckIgnore} onReplace={(val) => onSpellCheckReplace('experience', originalIdx, val, 'title')} />
@@ -696,7 +723,9 @@ const MajesticPlum = ({
                             const dateStr = startYear ? `${startYear} - ${edu.isCurrent ? "Present" : year}` : year;
                             return (
                                 <div key={i} data-item-index={originalIdx} style={styles.expItem}>
-                                    <div style={styles.expDot} />
+                                    <div style={styles.expDot}>
+                                        <div style={styles.expDotInner} />
+                                    </div>
                                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: "4px" }}>
                                         <div style={{ fontSize: "14px", fontWeight: "700", color: "#1a1a1a" }}>
                                             <RichTextSpellCheck html={edu.degree} isActive={isSpellCheckActive} onIgnore={onSpellCheckIgnore} onReplace={(val) => onSpellCheckReplace('education', originalIdx, val, 'degree')} />
@@ -734,7 +763,9 @@ const MajesticPlum = ({
                             const dateStr = proj.year || (proj.startYear && `${proj.startYear} - ${proj.isCurrent ? 'Present' : (proj.endYear || 'Present')}`);
                             return (
                                 <div key={i} data-item-index={originalIdx} style={styles.expItem}>
-                                    <div style={styles.expDot} />
+                                    <div style={styles.expDot}>
+                                        <div style={styles.expDotInner} />
+                                    </div>
                                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: "4px", marginBottom: "3px" }}>
                                         <div style={{ fontSize: "14px", fontWeight: "700", color: "#1a1a1a" }}>
                                             <RichTextSpellCheck html={proj.title} isActive={isSpellCheckActive} onIgnore={onSpellCheckIgnore} onReplace={(val) => onSpellCheckReplace('projects', originalIdx, val, 'title')} />
@@ -1062,7 +1093,7 @@ const MajesticPlum = ({
         <div className="resume-measurer" style={{ position: "absolute", top: -10000, left: -10000, width: "210mm", visibility: "hidden" }}>
             <div className="page-height-marker" style={{ height: "297mm", width: "1px", position: "absolute", left: 0, top: 0 }} />
             <div style={{ ...styles.page, height: "auto" }}>
-                <div data-column-id="left" style={{ ...styles.sidebar, minHeight: "auto", gap: "calc(25px * var(--theme-section-margin, 1))" }}>
+                <div data-column-id="left" style={{ ...styles.sidebar, height: "100%", gap: "calc(25px * var(--theme-section-margin, 1))" }}>
                     {personal?.photo && (
                         <div style={styles.sidebarPhotoWrap}>
                             <img src={personal.photo} style={styles.photo} alt="profile" />
@@ -1091,9 +1122,9 @@ const MajesticPlum = ({
                 <SortableContext items={[...activeLeftSections, ...activeRightSections]} strategy={verticalListSortingStrategy}>
                     {showPageBreaks && pages ? (
                         pages.map((page, i) => (
-                            <div key={i} style={{ ...styles.page, height: "297mm" }}>
+                            <div key={i} className="resume-page" style={{ ...styles.page, height: "297mm" }}>
                                 {/* SIDEBAR */}
-                                <div data-column-id="left" style={{ ...styles.sidebar, height: "100%", minHeight: "297mm" }}>
+                                <div data-column-id="left" style={{ ...styles.sidebar, height: "100%" }}>
                                     {i === 0 && personal?.photo && (
                                         <div style={styles.sidebarPhotoWrap}>
                                             <img src={personal.photo} style={styles.photo} alt="profile" />
@@ -1125,7 +1156,7 @@ const MajesticPlum = ({
                             </div>
                         ))
                     ) : (
-                        <div style={{ ...styles.page, height: "auto" }}>
+                        <div className="resume-page" style={{ ...styles.page, height: "auto", backgroundColor: "white" }}>
                             <div data-column-id="left" style={{ ...styles.sidebar, minHeight: "100%" }}>
                                 {personal?.photo && (
                                     <div style={styles.sidebarPhotoWrap}>

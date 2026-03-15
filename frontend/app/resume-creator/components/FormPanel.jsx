@@ -187,7 +187,7 @@ const normalizeData = (d) => {
     return normalized;
 };
 
-export default function FormPanel({ data, setData, templateId, onChangeTemplate, resume_id: propResumeId, builder_resume_id, jobId, title: propTitle, onSwitchProject, onRenameProject, onIdCreated }) {
+export default function FormPanel({ data, setData, templateId, onChangeTemplate, resume_id: propResumeId, builder_resume_id, jobId, title: propTitle, onSwitchProject, onRenameProject, onIdCreated, onSyncUrl }) {
     const { trackEvent } = useAnalytics();
     const [step, setStep] = useState(1);
 
@@ -246,14 +246,16 @@ export default function FormPanel({ data, setData, templateId, onChangeTemplate,
 
     useEffect(() => {
         const handleBeforeUnload = (e) => {
-            if (hasUnsavedChanges) {
+            // Only show legacy browser warning if we are NOT already showing
+            // our custom inbuilt "Leave Editor" message (navTarget).
+            if (hasUnsavedChanges && !navTarget) {
                 e.preventDefault();
                 e.returnValue = ''; // Standard way to show confirmation
             }
         };
         window.addEventListener('beforeunload', handleBeforeUnload);
         return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-    }, [hasUnsavedChanges]);
+    }, [hasUnsavedChanges, navTarget]);
     const [hasSeenSuccess, setHasSeenSuccess] = useState(false);
     const isInitializing = useRef(false); // Prevents double-initialization in strict mode
     const lastInitializedId = useRef(null); // Tracks which ID was last successfully loaded
@@ -445,12 +447,19 @@ export default function FormPanel({ data, setData, templateId, onChangeTemplate,
                         if (isValid) onChangeTemplate(existing.template_id);
                     }
 
-                    if (existing.last_step_index) {
-                        // Normalize: 1-5 maps 1:1. 6 is Hub. 7 is Finalize.
-                        if (existing.last_step_index === 7) {
-                            setStep(1000); // High value to trigger snap-to-finalize effect
-                        } else {
-                            setStep(existing.last_step_index);
+                    // Hydrate Step from URL or DB
+                    if (typeof window !== 'undefined') {
+                        const params = new URLSearchParams(window.location.search);
+                        const urlStep = parseInt(params.get('step'));
+                        const urlView = params.get('view');
+
+                        if (urlView === 'finalize') {
+                            setStep(finalizeStepId);
+                        } else if (!isNaN(urlStep) && urlStep > 0 && urlStep <= finalizeStepId) {
+                            setStep(urlStep);
+                        } else if (existing.last_step_index) {
+                            if (existing.last_step_index === 7) setStep(finalizeStepId);
+                            else setStep(existing.last_step_index);
                         }
                     }
 
@@ -462,8 +471,16 @@ export default function FormPanel({ data, setData, templateId, onChangeTemplate,
                     }, 800);
                     isInitializing.current = false;
                     return;
+                } else if (error) {
+                    console.error("[FormPanel] Error loading resume ID from URL:", error);
+                    showToast("Resume not found or access denied.", "error");
+                    setTimeout(() => {
+                        window.location.href = '/resumy/resume-creator?view=onboarding&mode=welcome';
+                    }, 2000);
+                    return;
                 }
             }
+
 
             // --- STRICT DRAFT LIMIT CHECK BEFORE ANY INSERTIONS ---
             if (!builder_resume_id) {
@@ -1010,7 +1027,33 @@ export default function FormPanel({ data, setData, templateId, onChangeTemplate,
             console.log(`[FormPanel] Step ${step} is out of bounds after section removal. Snapping to Finalize (${finalizeStepId}).`);
             setStep(finalizeStepId);
         }
-    }, [finalizeStepId, step]);
+
+        // Sync TO URL (Push state)
+        if (onSyncUrl && isLoadedFromDB && !isSwitching) {
+            const isFinalize = step === finalizeStepId;
+            onSyncUrl(isFinalize ? 'finalize' : 'editor', null, resumeId || builder_resume_id, isFinalize ? null : step);
+        }
+    }, [finalizeStepId, step, resumeId, isLoadedFromDB, isSwitching]);
+;
+
+    // React to URL changes (Pop state / Path updates)
+    useEffect(() => {
+        const handleUrlChange = () => {
+            const params = new URLSearchParams(window.location.search);
+            const urlStep = parseInt(params.get('step'));
+            const urlView = params.get('view');
+
+            if (urlView === 'finalize') {
+                if (step !== finalizeStepId) setStep(finalizeStepId);
+            } else if (!isNaN(urlStep) && urlStep > 0 && urlStep <= finalizeStepId) {
+                if (step !== urlStep) setStep(urlStep);
+            }
+        };
+
+        window.addEventListener('popstate', handleUrlChange);
+        return () => window.removeEventListener('popstate', handleUrlChange);
+    }, [step, finalizeStepId]);
+
 
     // Helper for Section Clicking (Hover-to-Edit)
     const getStepBySectionId = (sectionId) => {
@@ -1572,6 +1615,8 @@ export default function FormPanel({ data, setData, templateId, onChangeTemplate,
                         }
                     }}
                     isDraftExplorerOpen={isDraftExplorerOpen}
+                    navTarget={navTarget}
+                    setNavTarget={setNavTarget}
                 />
             );
         }
@@ -2844,6 +2889,42 @@ export default function FormPanel({ data, setData, templateId, onChangeTemplate,
                         </div>
                     </div>
                 )}
+                {/* Modal for Template Selection */}
+                <AnimatePresence>
+                    {isTemplateModalOpen && (
+                        <PremiumTemplateSelection
+                            userId={userId}
+                            data={data}
+                            onUpdateData={setData}
+                            onComplete={(id) => {
+                                onChangeTemplate(id);
+                                setTemplateModalOpen(false);
+                            }}
+                            onBack={() => setTemplateModalOpen(false)}
+                            projectTitle={propTitle}
+                            onUpdateTitle={(newTitle) => onRenameProject(resumeId, newTitle)}
+                            backLabel="Resume Builder"
+                        />
+                    )}
+                </AnimatePresence>
+
+                {/* Draft Explorer Modal */}
+                <DraftExplorer
+                    isOpen={isDraftExplorerOpen}
+                    onClose={() => setIsDraftExplorerOpen(false)}
+                    drafts={drafts}
+                    currentResumeId={resumeId}
+                    onSelectDraft={(draft) => onSwitchProject(draft)}
+                    onRenameDraft={handleRenameDraft}
+                    onDeleteDraft={handleDeleteDraft}
+                    onStartNew={() => window.location.href = '/resumy/resume-creator'}
+                    isMobile={isMobile}
+                />
+
+                {/* Switching Loader */}
+                <AnimatePresence>
+                    {isSwitching && <DraftSwitchLoader text="Switching Draft" />}
+                </AnimatePresence>
             </div>
         </div>
     );

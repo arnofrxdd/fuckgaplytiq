@@ -80,7 +80,11 @@ const IconicTimeline = ({
             flexDirection: "column",
         },
         header: {
-            padding: "var(--theme-page-margin, 50px) var(--theme-page-margin, 50px) 20px var(--theme-page-margin, 50px)",
+            paddingTop: "var(--theme-page-margin, 50px)",
+            paddingLeft: "var(--theme-page-margin, 50px)",
+            paddingRight: "var(--theme-page-margin, 50px)",
+            paddingBottom: "20px",
+            boxSizing: "border-box",
         },
         name: {
             fontSize: "calc(48px * var(--theme-font-scale, 1))",
@@ -108,7 +112,11 @@ const IconicTimeline = ({
             display: "flex",
             flex: 1,
             minHeight: 0,
-            padding: "20px var(--theme-page-margin, 50px) var(--theme-page-margin, 50px) var(--theme-page-margin, 50px)",
+            paddingTop: "20px",
+            paddingLeft: "var(--theme-page-margin, 50px)",
+            paddingRight: "var(--theme-page-margin, 50px)",
+            paddingBottom: "var(--theme-page-margin, 50px)",
+            boxSizing: "border-box",
         },
         leftColumn: {
             width: "30%",
@@ -135,19 +143,22 @@ const IconicTimeline = ({
             left: "35px",
             top: "0px",
             bottom: "0px",
-            width: "1px",
-            background: "#d1d5db",
+            width: "1.5px", // Slightly thicker for better visibility
+            background: "#9ca3af", // Darker gray
+            WebkitPrintColorAdjust: "exact",
         },
         spineCircle: {
             position: "absolute",
-            left: "-40.5px", // Centered at 35px
+            left: "-40.25px", // Center on 1.5px spine: 70 - 40.25 = 29.75. 29.75 + 6 (half of 12) = 35.75. Spine at 35 with 1.5 width has center at 35.75. PERFECT.
             top: "5px",
-            width: "11px",
-            height: "11px",
+            width: "12px",
+            height: "12px",
             borderRadius: "50%",
-            border: "1px solid #d1d5db",
+            border: "2px solid #9ca3af", // Darker border
             background: "white",
             zIndex: 1,
+            boxSizing: "border-box",
+            WebkitPrintColorAdjust: "exact",
         },
         sectionTitleSidebar: {
             fontSize: "calc(18px * var(--theme-font-scale, 1))",

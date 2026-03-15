@@ -80,20 +80,23 @@ export class PdfEngineV3 {
                 // 1. Inject minimal reset styles
                 const style = doc.createElement('style');
                 style.innerHTML = `
+                    * {
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
+                    }
                     html, body {
                         height: auto !important;
                         display: block !important;
                         overflow: visible !important;
                         margin: 0 !important;
                         padding: 0 !important;
-                        background: white !important;
-                        -webkit-print-color-adjust: exact !important;
-                        print-color-adjust: exact !important;
+                        background: transparent !important;
                     }
                     .resume-theme-provider {
                         height: auto !important;
                         overflow: visible !important;
                         display: block !important;
+                        background: transparent !important;
                     }
                     /* Ensure page breaks are respected as sent by the frontend */
                     .resume-page {
@@ -113,9 +116,17 @@ export class PdfEngineV3 {
                 
                 // 2. Find pages. We trust the frontend's .resume-page class.
                 // We also fallback to elements with the canonical A4 height style.
-                const validPages = Array.from(doc.querySelectorAll('.resume-page, .v3-confirmed-page, [style*="297mm"]'));
+                const allMatched = Array.from(doc.querySelectorAll('.resume-page, .v3-confirmed-page, [style*="297mm"]'))
+                    .filter((el: any) => !el.closest('.resume-measurer'));
                 
-                console.log(`[PdfEngineV3] Found ${validPages.length} pages.`);
+                // 2. Filter out nested "pages". 
+                // Some templates put '297mm' height on sidebars, which causes them to be 
+                // over-matched. We only want the top-most page containers.
+                const validPages = allMatched.filter(page => 
+                    !allMatched.some((other: any) => other !== page && other.contains(page))
+                );
+                
+                console.log(`[PdfEngineV3] Found ${allMatched.length} candidates, narrowed to ${validPages.length} valid top-level pages.`);
 
                 validPages.forEach((page: any, i: number) => {
                     // Force the canonical A4 dimensions if not already set,

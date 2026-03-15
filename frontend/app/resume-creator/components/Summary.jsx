@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { ArrowLeft, Plus, Loader2, Sparkles, Zap, Award, Briefcase, UserCheck, RefreshCw } from "lucide-react";
+import { fetchAuthenticatedAI } from "../utils/aiApi";
 import ResumeRenderer from "../templates/ResumeRenderer";
 import { Editor, EditorProvider, Toolbar, BtnBold, BtnItalic, BtnUnderline, BtnBulletList } from 'react-simple-wysiwyg';
 import "./form.css";
@@ -56,9 +57,8 @@ export default function Summary({ data, setData, templateId, onBack, onNext, onP
         if (!force && dnaSummaries.specialist) return;
         setIsLoading(true);
         try {
-            const response = await fetch('/resumy/api/ai/header-intelligence', {
+            const response = await fetchAuthenticatedAI('/resumy/api/ai/header-intelligence', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     type: "summary_dna",
                     value: "",

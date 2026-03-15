@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Sparkles, PenTool, Loader2, X } from 'lucide-react';
+import { fetchAuthenticatedAI } from "../utils/aiApi";
 import { Editor, EditorProvider, Toolbar, BtnBold, BtnItalic, BtnUnderline, BtnBulletList } from 'react-simple-wysiwyg';
 import './SummaryAddon.css';
 
@@ -32,9 +33,8 @@ export default function SummaryAddon({ data, setData, onBack, onNext }) {
         setSummaryMode(mode);
 
         try {
-            const response = await fetch('/resumy/api/generate-summary', {
+            const response = await fetchAuthenticatedAI('/resumy/api/generate-summary', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ jobTitle, existingSummary: currentSummary, type: mode })
             });
             const res = await response.json();

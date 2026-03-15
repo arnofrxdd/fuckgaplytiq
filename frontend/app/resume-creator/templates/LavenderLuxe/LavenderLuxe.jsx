@@ -1,4 +1,4 @@
-﻿import React, { useRef } from "react";
+import React, { useRef } from "react";
 import { DndContext } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import SectionWrapper from "../../components/SectionWrapper";
@@ -113,6 +113,7 @@ const LavenderLuxe = ({
             overflow: "hidden",
             display: "flex",
             flexDirection: "column",
+            WebkitPrintColorAdjust: "exact",
         },
         // HEADER: full-width bordered box
         headerOuter: {
@@ -123,6 +124,8 @@ const LavenderLuxe = ({
             minHeight: "140px",
             overflow: "hidden",
             flexShrink: 0,
+            boxSizing: "border-box",
+            WebkitPrintColorAdjust: "exact",
         },
         headerSidePanel: {
             width: sidebarW,
@@ -132,6 +135,8 @@ const LavenderLuxe = ({
             justifyContent: "center",
             padding: "16px",
             flexShrink: 0,
+            boxSizing: "border-box",
+            WebkitPrintColorAdjust: "exact",
         },
         headerPhoto: {
             width: "94px",
@@ -140,6 +145,7 @@ const LavenderLuxe = ({
             objectFit: "cover",
             border: "4px solid white",
             background: "white",
+            boxSizing: "border-box",
         },
         headerPhotoPlaceholder: {
             width: "94px",
@@ -155,6 +161,8 @@ const LavenderLuxe = ({
             justifyContent: "center",
             padding: "20px 32px",
             background: mainBg,
+            boxSizing: "border-box",
+            WebkitPrintColorAdjust: "exact",
         },
         name: {
             fontSize: "calc(40px * var(--theme-font-scale, 1))",
@@ -163,6 +171,7 @@ const LavenderLuxe = ({
             letterSpacing: "2.5px",
             color: "#1a1a1a",
             lineHeight: "0.95",
+            marginTop: "0",
             marginBottom: "10px",
             fontFamily: "'Inter', 'Arial Black', sans-serif",
         },
@@ -179,7 +188,10 @@ const LavenderLuxe = ({
             display: "flex",
             flex: 1,
             minHeight: 0,
-            padding: `0 ${pagePadding} ${pagePadding} ${pagePadding}`,
+            marginLeft: `calc(${pagePadding} + ${headerBorderW})`,
+            marginRight: `calc(${pagePadding} + ${headerBorderW})`,
+            marginBottom: pagePadding,
+            boxSizing: "border-box",
         },
         sidebar: {
             width: sidebarW,
@@ -189,7 +201,7 @@ const LavenderLuxe = ({
             flexDirection: "column",
             boxSizing: "border-box",
             flexShrink: 0,
-            minHeight: "100%",
+            WebkitPrintColorAdjust: "exact",
         },
         main: {
             flex: 1,
@@ -1032,8 +1044,9 @@ const LavenderLuxe = ({
             flexDirection: "column",
             gap: "calc(25px * var(--theme-section-margin, 1))"
         };
+        const isFirstPage = pageIndex === 0;
         return (
-            <div style={styles.body}>
+            <div style={{ ...styles.body, marginTop: isFirstPage ? 0 : pagePadding }}>
                 <div style={styles.sidebar}>
                     {renderZone(showPageBreaks ? `sidebar-p${pageIndex}` : 'sidebar', sidebarItems, zoneStyle)}
                 </div>

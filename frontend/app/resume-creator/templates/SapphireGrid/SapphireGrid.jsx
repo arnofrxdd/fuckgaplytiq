@@ -83,8 +83,12 @@ const SapphireGrid = ({
             flexDirection: "column",
         },
         headerArea: {
-            padding: "var(--theme-page-margin, 50px) 0 30px 0",
+            paddingTop: "var(--theme-page-margin, 50px)",
+            paddingLeft: "40px",
+            paddingRight: "40px",
+            paddingBottom: "30px",
             textAlign: "center",
+            boxSizing: "border-box",
         },
         nameContainer: {
             display: "flex",
@@ -147,25 +151,34 @@ const SapphireGrid = ({
         sidebarSpine: {
             width: sidebarWidth,
             background: "#f8fafc",
-            padding: "calc(25px * var(--theme-section-margin, 1)) var(--theme-page-margin, 20px)",
+            paddingTop: "calc(25px * var(--theme-section-margin, 1))",
+            paddingLeft: "var(--theme-page-margin, 20px)",
+            paddingRight: "20px",
+            paddingBottom: "25px",
             display: "flex",
             flexDirection: "column",
             borderRight: "1px solid #e2e8f0",
             minHeight: "100%",
+            boxSizing: "border-box",
         },
         sidebarTitle: {
             fontSize: "calc(14px * var(--theme-font-scale, 1))",
             fontWeight: "700",
             color: accentLight,
+            marginTop: "0",
             lineHeight: "1.2",
             textTransform: "uppercase",
             letterSpacing: "0.5px",
         },
         mainContent: {
             flex: 1,
-            padding: "calc(25px * var(--theme-section-margin, 1)) var(--theme-page-margin, 40px)",
+            paddingTop: "calc(25px * var(--theme-section-margin, 1))",
+            paddingLeft: "30px",
+            paddingRight: "var(--theme-page-margin, 40px)",
+            paddingBottom: "25px",
             borderBottom: "1px solid #e2e8f0",
             background: "transparent", // Let the pageBody gradient show through
+            boxSizing: "border-box",
         },
         pageBody: {
             flex: 1,
@@ -175,6 +188,7 @@ const SapphireGrid = ({
             position: "relative",
             minHeight: 0,
             paddingBottom: "var(--theme-page-margin, 40px)",
+            boxSizing: "border-box",
         },
         historyItem: {
             marginBottom: "calc(25px * var(--theme-paragraph-margin, 1))",

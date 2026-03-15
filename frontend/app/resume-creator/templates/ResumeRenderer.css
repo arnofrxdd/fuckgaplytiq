@@ -22,6 +22,7 @@
     font-family: inherit;
     /* Prevent global font override if specific template sets font on wrapper */
     line-height: inherit;
+    margin: 0;
 }
 
 .resume-theme-provider p {
@@ -102,7 +103,7 @@
 .resume-theme-provider.paged-mode div[style*="height: 297mm"],
 .resume-page {
     box-shadow: 0 10px 60px rgba(0, 0, 0, 0.15) !important;
-    background: white;
+    background-color: white;
     border-radius: 0 !important;
     transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
 }

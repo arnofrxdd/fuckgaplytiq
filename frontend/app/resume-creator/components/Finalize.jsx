@@ -98,7 +98,7 @@ const VirtualTemplateCard = React.memo(({ t, data, isActive, isLoading, onClick 
     );
 });
 
-export default function Finalize({ data, setData, onChangeTemplate, onDownloadPDF, templateId, onBack, navigateToSection, jobId, builder_resume_id, DraftSwitcher, title, isSaving, isMobile, onOpenDraftExplorer = () => { }, isDraftExplorerOpen = false }) {
+export default function Finalize({ data, setData, onChangeTemplate, onDownloadPDF, templateId, onBack, navigateToSection, jobId, builder_resume_id, DraftSwitcher, title, isSaving, isMobile, onOpenDraftExplorer = () => { }, isDraftExplorerOpen = false, navTarget: parentNavTarget, setNavTarget: parentSetNavTarget }) {
     const router = useRouter();
     const { trackEvent } = useAnalytics();
     const [activeTab, setActiveTab] = useState(isMobile ? null : 'templates'); // 'templates', 'design', 'add', 'spell'
@@ -413,7 +413,10 @@ export default function Finalize({ data, setData, onChangeTemplate, onDownloadPD
 
     const categories = ['All', 'Professional', 'Modern', 'Creative', 'Simple', 'Executive', '1-Column', '2-Column', 'Premium'];
 
-    const [navTarget, setNavTarget] = useState(null);
+    // If parent didn't provide them (e.g. standalone testing), fallback to local state
+    const [localNavTarget, setLocalNavTarget] = useState(null);
+    const navTarget = parentNavTarget !== undefined ? parentNavTarget : localNavTarget;
+    const setNavTarget = parentSetNavTarget !== undefined ? parentSetNavTarget : setLocalNavTarget;
 
     // Filter templates based on search and category
     const filteredTemplates = useMemo(() => {

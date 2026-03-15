@@ -137,8 +137,12 @@ const OnyxModern = ({
             fontSize: "40px",
         },
         nameBlock: {
-            padding: "var(--theme-page-margin, 40px) 22px 18px 22px",
+            paddingTop: "var(--theme-page-margin, 40px)",
+            paddingLeft: "var(--theme-page-margin, 40px)", // Align with page margin
+            paddingRight: "22px",
+            paddingBottom: "18px",
             borderBottom: "1px solid rgba(255,255,255,0.2)",
+            boxSizing: "border-box",
         },
         nameText: {
             fontSize: "calc(28px * var(--theme-font-scale, 1))",
@@ -159,19 +163,24 @@ const OnyxModern = ({
             flexDirection: "column",
             gap: "calc(16px * var(--theme-section-margin, 1))",
             paddingBottom: "var(--theme-page-margin, 40px)",
+            boxSizing: "border-box",
         },
         sidebarSectionHeader: {
             background: "rgba(255,255,255,0.22)",
-            padding: "7px 22px",
+            padding: "7px var(--theme-page-margin, 40px)", // Consistent header indent
             fontSize: "calc(13px * var(--theme-font-scale, 1))",
             fontWeight: "700",
             color: "white",
+            marginTop: "0",
             letterSpacing: "0.5px",
             textTransform: "uppercase",
             marginBottom: "10px",
+            boxSizing: "border-box",
+            WebkitPrintColorAdjust: "exact",
         },
         sidebarSectionContent: {
-            padding: "0 22px",
+            padding: "0 var(--theme-page-margin, 40px)", // Content should follow page margin
+            boxSizing: "border-box",
         },
         contactLabel: {
             fontSize: "calc(11.5px * var(--theme-font-scale, 1))",
@@ -209,11 +218,15 @@ const OnyxModern = ({
         // RIGHT MAIN COLUMN
         mainColumn: {
             width: "68%",
-            padding: "var(--theme-page-margin, 40px)",
+            paddingTop: "var(--theme-page-margin, 40px)",
+            paddingLeft: "30px", // Internal gap
+            paddingRight: "var(--theme-page-margin, 40px)",
+            paddingBottom: "var(--theme-page-margin, 40px)",
             display: "flex",
             flexDirection: "column",
             gap: "0px",
             background: "white",
+            boxSizing: "border-box",
         },
         summaryText: {
             fontSize: "calc(13px * var(--theme-font-scale, 1))",
@@ -1252,7 +1265,7 @@ const OnyxModern = ({
                 <SortableContext items={[...activeSidebarSections, ...activeMainSections]} strategy={verticalListSortingStrategy}>
                     {showPageBreaks && pages ? (
                         pages.map((page, i) => (
-                            <div key={i} style={styles.page}>
+                            <div key={i} className="resume-page" style={styles.page}>
                                 <div style={styles.sidebarColumn}>
                                     {i === 0 && <Header />}
                                     {renderZone(`sidebar-p${i}`, page.sidebar, SIDEBAR_ZONE_STYLE)}
@@ -1264,7 +1277,7 @@ const OnyxModern = ({
                             </div>
                         ))
                     ) : (
-                        <div style={{ ...styles.page, height: "auto", minHeight: "100%" }}>
+                        <div className="resume-page" style={{ ...styles.page, height: "auto", minHeight: "100%" }}>
                             <div style={styles.sidebarColumn}>
                                 <Header />
                                 {renderZone('sidebar', activeSidebarSections, SIDEBAR_ZONE_STYLE)}

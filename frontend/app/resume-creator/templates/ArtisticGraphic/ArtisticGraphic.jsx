@@ -99,7 +99,7 @@ const ArtisticGraphic = ({
         page: {
             width: "210mm",
             height: "297mm",
-            background: rightBg,
+            backgroundColor: rightBg,
             boxSizing: "border-box",
             position: "relative",
             margin: "0 auto 30px auto",
@@ -108,6 +108,7 @@ const ArtisticGraphic = ({
             overflow: "hidden",
             display: "flex",
             flexDirection: "row",
+            WebkitPrintColorAdjust: "exact",
         },
         // ── Sidebar ─────────────────────────────────────────────────────────────
         sidebar: {
@@ -117,7 +118,8 @@ const ArtisticGraphic = ({
             flexDirection: "column",
             boxSizing: "border-box",
             position: "relative",
-            minHeight: "100%",
+            height: "100%",
+            WebkitPrintColorAdjust: "exact",
         },
         sidebarHeader: {
             padding: "36px 24px 20px 28px",
@@ -169,9 +171,11 @@ const ArtisticGraphic = ({
             color: sidebarText,
             textTransform: "uppercase",
             letterSpacing: "1.5px",
+            marginTop: "0",
             marginBottom: "12px",
             paddingBottom: "5px",
             borderBottom: "1px solid rgba(255,255,255,0.25)",
+            boxSizing: "border-box",
         },
         // Sidebar body text
         sidebarText: {
@@ -272,9 +276,11 @@ const ArtisticGraphic = ({
             color: rightAccent,
             textTransform: "uppercase",
             letterSpacing: "1.5px",
+            marginTop: "0",
             marginBottom: "14px",
             paddingBottom: "5px",
             borderBottom: `2px solid var(--theme-color, #3d5a3e)`,
+            boxSizing: "border-box",
         },
         // Experience item
         expCompany: {
@@ -1235,8 +1241,8 @@ const ArtisticGraphic = ({
     const Measurer = () => (
         <div className="resume-measurer" style={{ position: "absolute", top: -10000, left: -10000, width: "210mm", visibility: "hidden" }}>
             <div className="page-height-marker" style={{ height: "297mm", width: "1px", position: "absolute", left: 0, top: 0 }} />
-            <div style={{ ...styles.page, minHeight: "297mm", height: "auto" }}>
-                <div style={{ ...styles.sidebar, minHeight: "297mm" }}>
+            <div style={{ ...styles.page, minHeight: "100%", height: "auto" }}>
+                <div style={{ ...styles.sidebar, height: "100%" }}>
                     <Header />
                     <div data-column-id="sidebar" style={{ ...styles.sidebarBody }}>
                         {activeSidebarSections.map(sid => (
@@ -1265,14 +1271,22 @@ const ArtisticGraphic = ({
     // ════════════════════════════════════════════════════════════════════════════
     return (
         <div ref={containerRef} className="artistic-graphic-root">
+            <style>{`
+                .artistic-graphic-root .resume-page {
+                    background-color: ${rightBg} !important;
+                    background: ${rightBg} !important;
+                    -webkit-print-color-adjust: exact !important;
+                    print-color-adjust: exact !important;
+                }
+            `}</style>
             <Measurer />
             <DndContext {...dndContextProps}>
                 <SortableContext items={[...activeSidebarSections, ...activeMainSections]} strategy={verticalListSortingStrategy}>
                     {showPageBreaks && pages ? (
                         pages.map((page, i) => (
-                            <div key={i} style={{ ...styles.page, minHeight: "297mm", height: "297mm" }}>
+                            <div key={i} className="resume-page" style={{ ...styles.page, height: "297mm", backgroundColor: rightBg, WebkitPrintColorAdjust: "exact", printColorAdjust: "exact" }}>
                                 {/* Sidebar */}
-                                <div style={{ ...styles.sidebar, minHeight: "297mm" }}>
+                                <div style={{ ...styles.sidebar, height: "100%" }}>
                                     {i === 0 && <Header />}
                                     <div style={styles.sidebarBody}>
                                         {renderZone(`sidebar-p${i}`, page.sidebar, sidebarGap)}
@@ -1288,9 +1302,9 @@ const ArtisticGraphic = ({
                             </div>
                         ))
                     ) : (
-                        <div style={{ ...styles.page, height: "auto", minHeight: "297mm" }}>
+                        <div className="resume-page" style={{ ...styles.page, height: "auto", backgroundColor: rightBg, WebkitPrintColorAdjust: "exact", printColorAdjust: "exact" }}>
                             {/* Sidebar */}
-                            <div style={{ ...styles.sidebar, minHeight: "297mm" }}>
+                            <div style={{ ...styles.sidebar, height: "100%" }}>
                                 <Header />
                                 <div style={styles.sidebarBody}>
                                     {renderZone('sidebar', activeSidebarSections, sidebarGap)}

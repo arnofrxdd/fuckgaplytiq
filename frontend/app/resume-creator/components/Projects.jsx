@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { ArrowLeft, Check, Search, Plus, Loader2, Edit2, Trash2, Lightbulb, PenLine, ChevronDown, GripVertical } from "lucide-react";
+import { fetchAuthenticatedAI } from "../utils/aiApi";
 import {
     DndContext,
     closestCenter,
@@ -247,9 +248,8 @@ export default function Projects({ data, setData, templateId, onBack, onNext, on
         if (!term) return;
         setIsLoadingSuggestions(true);
         try {
-            const res = await fetch('/resumy/api/ai/generate', {
+            const res = await fetchAuthenticatedAI('/resumy/api/ai/generate', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     type: 'project_bullet_points',
                     input: { title: term }

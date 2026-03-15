@@ -76,8 +76,69 @@ const getResumeAIClient = () => {
  *   System: "You are a professional career coach. Given the resume text, produce 3 short professional summary variants tailored to the target role. Return JSON array."
  */
 export async function generateVariants(type: string, input: any, user?: { id?: string; email?: string }): Promise<string[]> {
-    console.warn('⚠️ generateVariants DISABLED (OpenAI disabled)');
-    return [];
+    const aiClient = getResumeAIClient();
+    if (!aiClient) {
+        console.warn(`⚠️ generateVariants DISABLED (No AI client available)`);
+        return [];
+    }
+
+    const model = process.env.GROQ_MODEL || 'llama-3.1-8b-instant';
+    const provider = groq ? 'groq' : (mistral ? 'mistral' : 'openai');
+
+    let system = "You are a professional resume writer.";
+    let userPrompt = "";
+
+    if (type === 'rewrite_project' || type === 'project_suggestions' || type === 'project_bullet_points') {
+        system = "You are a professional resume writer. Generate 3 high-impact project descriptions for a resume based on the given topic. Return them as a JSON array of strings.";
+        userPrompt = `Project Topic: ${input.title || input}`;
+    } else if (type === 'suggest_certifications') {
+        system = "You are a professional resume writer. Suggest 5-8 relevant professional certifications for the given job title or role. Return them as a JSON array of strings.";
+        userPrompt = `Role: ${input.role || input}`;
+    } else if (type === 'rewrite_bullet') {
+        system = "You are a professional resume writer. Rewrite the given bullet to be action-oriented, concise, and include metrics. Return 3 variants as a JSON array of strings.";
+        userPrompt = `Bullet: ${input.bullet}\nRole: ${input.role}\nCompany: ${input.company}`;
+    } else if (type === 'generate_summary') {
+        system = "You are a career coach. Produce 3 short professional summary variants tailored to the target role. Return as a JSON array of strings.";
+        userPrompt = `Resume context: ${input.text}\nTarget Role: ${input.role || 'Professional'}`;
+    } else {
+        userPrompt = String(input);
+    }
+
+    try {
+        const resp = await aiClient.chat.completions.create({
+            model: model,
+            messages: [
+                { role: 'system', content: system },
+                { role: 'user', content: userPrompt }
+            ],
+            response_format: { type: 'json_object' },
+            temperature: 0.7,
+        });
+
+        if (resp.usage) {
+            AIConsumptionTracker.logUsage({
+                userId: user?.id,
+                userEmail: user?.email,
+                featureName: `generate_${type}`,
+                modelName: model,
+                provider: provider,
+                promptTokens: resp.usage.prompt_tokens,
+                completionTokens: resp.usage.completion_tokens,
+                totalTokens: resp.usage.total_tokens,
+                estimatedCostUsd: AIConsumptionTracker.calculateCost(model, resp.usage.prompt_tokens, resp.usage.completion_tokens),
+                metadata: { type }
+            });
+        }
+
+        const content = resp.choices[0]?.message?.content || '{}';
+        const parsed = JSON.parse(content);
+        return Array.isArray(parsed.variants) ? parsed.variants : 
+               (Array.isArray(parsed.choices) ? parsed.choices : 
+               (Array.isArray(parsed.suggestions) ? parsed.suggestions : []));
+    } catch (e) {
+        console.error('generateVariants Error:', e);
+        return [];
+    }
 }
 
 /**
@@ -292,7 +353,7 @@ Be thorough and extract ALL content present in the resume, but keep its quality 
 /**
  * Improve experience bullet points
  */
-export async function improveExperience(bullets: string[], role: string, company: string): Promise<string[]> {
+export async function improveExperience(bullets: string[], role: string, company: string, user?: { id?: string; email?: string }): Promise<string[]> {
     console.warn('⚠️ improveExperience DISABLED (OpenAI disabled)');
     return bullets; // Return original bullets as it's not a resume upload task
 }
@@ -307,7 +368,7 @@ export async function generateSummary(resumeText: string, targetRole?: string, u
 /**
  * Suggest skills based on resume
  */
-export async function suggestSkills(resumeText: string, industry?: string): Promise<string[]> {
+export async function suggestSkills(resumeText: string, industry?: string, user?: { id?: string; email?: string }): Promise<string[]> {
     console.warn('⚠️ suggestSkills DISABLED (OpenAI disabled)');
     return [];
 }
@@ -315,7 +376,7 @@ export async function suggestSkills(resumeText: string, industry?: string): Prom
 /**
  * Match resume to job description
  */
-export async function matchToJobDescription(resumeData: any, jobDescription: string): Promise<{
+export async function matchToJobDescription(resumeData: any, jobDescription: string, user?: { id?: string; email?: string }): Promise<{
     suggestions: string[];
     missingKeywords: string[];
     matchScore: number;
@@ -343,13 +404,14 @@ function heuristicScoreFromResume(resumeData: any) {
 
         const clamp = (v: number) => Math.max(40, Math.min(95, v))
 
-        const base = length < 2000 ? 55 : length < 8000 ? 70 : 80
-        const atsScore = clamp(base + skills * 1 + exp * 2)
-        const grammarScore = clamp(base + (hasSummary ? 5 : 0))
-        const keywordScore = clamp(base + skills * 2)
-        const formattingScore = clamp(base)
-        const toneScore = clamp(base + (hasSummary ? 3 : 0))
-        const overallScore = Math.round((atsScore + grammarScore + keywordScore + formattingScore + toneScore) / 5)
+        const base = length < 2000 ? 65 : length < 8000 ? 75 : 82;
+        // Don't penalize missing experience if it's 0 (User Request)
+        const atsScore = clamp(base + skills * 1 + (exp > 0 ? exp * 2 : 5)); 
+        const grammarScore = clamp(base + (hasSummary ? 5 : 0));
+        const keywordScore = clamp(base + skills * 2);
+        const formattingScore = clamp(base);
+        const toneScore = clamp(base + (hasSummary ? 3 : 0));
+        const overallScore = Math.round((atsScore + grammarScore + keywordScore + formattingScore + toneScore) / 5);
 
         const issues: string[] = []
         const suggestions: string[] = []
@@ -360,10 +422,6 @@ function heuristicScoreFromResume(resumeData: any) {
         if (skills < 5) {
             issues.push('Very few skills listed')
             suggestions.push('List at least 8–12 relevant technical and soft skills')
-        }
-        if (exp === 0) {
-            issues.push('Work experience section appears to be empty')
-            suggestions.push('Add one or more roles with responsibilities and achievements')
         }
         if (!issues.length) {
             suggestions.push('Refine bullets with concrete metrics and outcomes where possible')
@@ -396,7 +454,7 @@ function heuristicScoreFromResume(resumeData: any) {
 /**
  * Score resume quality
  */
-export async function scoreResume(resumeData: any, originalScore?: number, isExternal: boolean = true): Promise<{
+export async function scoreResume(resumeData: any, originalScore?: number, isExternal: boolean = true, user?: { id?: string; email?: string }): Promise<{
     atsScore: number;
     grammarScore: number;
     keywordScore: number;
@@ -413,13 +471,13 @@ export async function scoreResume(resumeData: any, originalScore?: number, isExt
 /**
  * Optimize resume for export
  */
-export async function optimizeForExport(resumeData: any): Promise<any> {
+export async function optimizeForExport(resumeData: any, user?: { id?: string; email?: string }): Promise<any> {
     console.warn('⚠️ optimizeForExport DISABLED (OpenAI disabled)');
     return resumeData;
 }
 
 // Generic helper for background workers to generate text for a prompt
-export async function generateWithAI(prompt: string, model?: string): Promise<string> {
+export async function generateWithAI(prompt: string, model?: string, user?: { id?: string; email?: string }): Promise<string> {
     console.warn('⚠️ generateWithAI DISABLED (OpenAI disabled)');
     return '';
 }
@@ -427,7 +485,7 @@ export async function generateWithAI(prompt: string, model?: string): Promise<st
 /**
  * Generate a professional headline based on resume data if not present
  */
-export async function generateProfessionalHeadline(resumeData: any): Promise<string> {
+export async function generateProfessionalHeadline(resumeData: any, user?: { id?: string; email?: string }): Promise<string> {
     console.warn('⚠️ generateProfessionalHeadline DISABLED (OpenAI disabled)');
     return '';
 }

@@ -19,6 +19,7 @@ import { CSS } from '@dnd-kit/utilities';
 import ResumeRenderer from "../templates/ResumeRenderer";
 import { templatesConfig } from "../templates/TemplateManager";
 import { Editor, EditorProvider, Toolbar, BtnBold, BtnItalic, BtnUnderline, BtnBulletList } from 'react-simple-wysiwyg';
+import { fetchAuthenticatedAI } from "../utils/aiApi";
 import "./form.css";
 import "./education.css"; // We heavily rely on education.css for the studio look now
 import "./experience.css";
@@ -236,9 +237,8 @@ export default function Experience({ data, setData, templateId, onBack, onNext, 
 
     const getAIHeaderAdvice = async (type, value, context = {}) => {
         try {
-            const response = await fetch('/resumy/api/ai/header-intelligence', {
+            const response = await fetchAuthenticatedAI('/resumy/api/ai/header-intelligence', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ type, value, context })
             });
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -508,9 +508,8 @@ export default function Experience({ data, setData, templateId, onBack, onNext, 
         setShowLoadingPopup(true);
         setAiSuggestions([]);
         try {
-            const response = await fetch('/resumy/api/ai/header-intelligence', {
+            const response = await fetchAuthenticatedAI('/resumy/api/ai/header-intelligence', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     type: "experience_suggestions",
                     value: term

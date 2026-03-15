@@ -1,4 +1,4 @@
-﻿import React, { useRef } from "react";
+import React, { useRef } from "react";
 import { DndContext } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import SectionWrapper from "../../components/SectionWrapper";
@@ -61,7 +61,10 @@ const CorporateTimeline = ({
     const styles = {
         page: {
             width: "210mm", height: "297mm", background: "white",
-            padding: "var(--theme-page-margin, 40px) var(--theme-page-margin, 40px) var(--theme-page-margin, 40px) var(--theme-page-margin, 40px)",
+            paddingTop: "var(--theme-page-margin, 40px)",
+            paddingLeft: "var(--theme-page-margin, 40px)",
+            paddingRight: "var(--theme-page-margin, 40px)",
+            paddingBottom: "var(--theme-page-margin, 40px)",
             boxSizing: "border-box", position: "relative",
             margin: "0 auto 30px auto", color: darkText,
             fontFamily: "var(--theme-font, 'Inter', sans-serif)",
@@ -128,13 +131,31 @@ const CorporateTimeline = ({
         timelineLine: {
             position: "absolute", left: "14px", top: "12px", bottom: "12px",
             width: "2px", background: primaryBlue,
+            WebkitPrintColorAdjust: "exact",
         },
         timelineDot: {
-            position: "absolute", left: "-22px", top: "6px",
-            width: "14px", height: "14px", borderRadius: "50%",
-            background: primaryBlue, border: "2px solid white",
-            boxShadow: `0 0 0 2px ${primaryBlue}`,
-            zIndex: 2,
+            position: "absolute",
+            left: "-25px", // Center = 30 - 25 + 10 = 15. Spine at 14 (width 2) has center at 15. PERFECT.
+            top: "3px",
+            width: "20px",
+            height: "20px",
+            borderRadius: "50%",
+            backgroundColor: "white",
+            border: `1.5px solid ${primaryBlue}`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 10,
+            boxSizing: "border-box",
+            overflow: "visible",
+            WebkitPrintColorAdjust: "exact",
+        },
+        timelineDotInner: {
+            width: "10px",
+            height: "10px",
+            borderRadius: "50%",
+            backgroundColor: primaryBlue,
+            WebkitPrintColorAdjust: "exact",
         },
         timelineItem: { position: "relative", paddingLeft: "10px" },
         historyRow: {
@@ -288,7 +309,9 @@ const CorporateTimeline = ({
                                 const locationStr = [exp.location, exp.isRemote ? "(Remote)" : null].filter(Boolean).join(" ");
                                 return (
                                     <div key={i} data-item-index={originalIdx} style={{ ...styles.timelineItem, ...styles.itemSpacing }}>
-                                        <div style={styles.timelineDot} />
+                                        <div style={styles.timelineDot}>
+                                            <div style={styles.timelineDotInner} />
+                                        </div>
                                         <div style={{ display: "grid", gridTemplateColumns: "0.8fr 1.5fr 0.7fr", gap: "8px", alignItems: "baseline", marginBottom: "calc(4px * var(--theme-paragraph-margin, 1))" }}>
                                             <div style={{ fontWeight: "700", color: primaryBlue, fontSize: "calc(13px * var(--theme-font-scale, 1))" }}>
                                                 <RichTextSpellCheck html={exp.company || ""} isActive={isSpellCheckActive} onIgnore={onSpellCheckIgnore} onReplace={(val) => onSpellCheckReplace('experience', originalIdx, val, 'company')} />

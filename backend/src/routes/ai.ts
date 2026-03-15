@@ -3,7 +3,7 @@ import multer from 'multer'
 import { generateVariants, parseResumeText, improveExperience, generateSummary, suggestSkills, matchToJobDescription, scoreResume, optimizeForExport, getHeaderIntelligence, getTopicSummary } from '../services/aiClient'
 import { parsePdfBuffer, parseDocxBuffer, extractStructuredResume } from '../services/parser'
 import { supabase } from '../services/supabase'
-import { authGuard } from '../middlewares/auth'
+import { authGuard, optionalAuth } from '../middlewares/auth'
 import { rateLimit } from '../middlewares/rateLimit'
 import { supabaseStorage } from '../services/supabaseStorage'
 import { createVirusScanMiddleware } from '../middlewares/virusScan'
@@ -77,7 +77,7 @@ router.post('/generate', authGuard, rateLimit(20, 60 * 60 * 1000), async (req, r
 
 // Parse resume from uploaded file (one-off parser endpoint)
 // Files are compressed (if images), scanned for viruses, then stored in Supabase
-router.post('/parseResume', rateLimit(5, 60 * 60 * 1000), imageCompressMiddleware, virusScanMiddleware, uploadStream.single('file'), async (req, res) => {
+router.post('/parseResume', optionalAuth, rateLimit(5, 60 * 60 * 1000), imageCompressMiddleware, virusScanMiddleware, uploadStream.single('file'), async (req, res) => {
     try {
         if (!req.file) return res.status(400).json({ error: 'No file uploaded' })
 
@@ -147,7 +147,7 @@ router.post('/enhance-experience', authGuard, rateLimit(30, 60 * 60 * 1000), asy
     try {
         const { bullets, role, company } = req.body
         if (!bullets || !Array.isArray(bullets)) return res.status(400).json({ error: 'bullets array required' })
-        const improved = await improveExperience(bullets, role || '', company || '') // improveExperience doesn't log yet, but good to have
+        const improved = await improveExperience(bullets, role || '', company || '', { id: req.user!.id, email: req.user!.email }) // improveExperience doesn't log yet, but good to have
         res.json({ improved })
     } catch (err) {
         console.error('enhance-experience failed', err)
@@ -171,7 +171,7 @@ router.post('/suggest-skills', authGuard, rateLimit(20, 60 * 60 * 1000), async (
     try {
         const { resumeText, industry } = req.body
         if (!resumeText) return res.status(400).json({ error: 'resumeText is required' })
-        const skills = await suggestSkills(resumeText, industry)
+        const skills = await suggestSkills(resumeText, industry, { id: req.user!.id, email: req.user!.email })
         res.json({ skills })
     } catch (err) {
         console.error('suggest-skills failed', err)
@@ -183,7 +183,7 @@ router.post('/job-match', authGuard, rateLimit(10, 60 * 60 * 1000), async (req, 
     try {
         const { resumeData, jobDescription } = req.body
         if (!resumeData || !jobDescription) return res.status(400).json({ error: 'resumeData and jobDescription required' })
-        const result = await matchToJobDescription(resumeData, jobDescription)
+        const result = await matchToJobDescription(resumeData, jobDescription, { id: req.user!.id, email: req.user!.email })
         res.json(result)
     } catch (err) {
         console.error('job-match failed', err)
@@ -198,8 +198,9 @@ router.post('/improveExperience', authGuard, rateLimit(30, 60 * 60 * 1000), asyn
         if (!bullets || !Array.isArray(bullets)) {
             return res.status(400).json({ error: 'bullets array is required' })
         }
-
-        const improved = await improveExperience(bullets, role || '', company || '')
+        
+        const user = req.user ? { id: req.user.id, email: req.user.email } : undefined;
+        const improved = await improveExperience(bullets, role || '', company || '', user)
         res.json({ improved })
     } catch (error) {
         console.error('Experience improvement failed', error)
@@ -231,7 +232,7 @@ router.post('/suggestSkills', authGuard, rateLimit(10, 60 * 60 * 1000), async (r
             return res.status(400).json({ error: 'resumeText is required' })
         }
 
-        const skills = await suggestSkills(resumeText, industry)
+        const skills = await suggestSkills(resumeText, industry, { id: req.user!.id, email: req.user!.email })
         res.json({ skills })
     } catch (error) {
         console.error('Skills suggestion failed', error)
@@ -247,7 +248,7 @@ router.post('/matchJD', authGuard, rateLimit(5, 60 * 60 * 1000), async (req, res
             return res.status(400).json({ error: 'resumeData and jobDescription are required' })
         }
 
-        const result = await matchToJobDescription(resumeData, jobDescription)
+        const result = await matchToJobDescription(resumeData, jobDescription, { id: req.user!.id, email: req.user!.email })
         res.json(result)
     } catch (error) {
         console.error('JD matching failed', error)
@@ -269,7 +270,8 @@ router.post('/score', authGuard, scoreRateLimit, async (req, res) => {
         const dataSize = JSON.stringify(resumeData).length
         console.log(`🔍 Starting resume scoring endpoint... Data size: ${dataSize} chars`)
 
-        const scores = await scoreResume(resumeData)
+        const user = req.user ? { id: req.user.id, email: req.user.email } : undefined;
+        const scores = await scoreResume(resumeData, undefined, true, user)
         console.log('✅ Resume scoring endpoint completed')
         res.json(scores)
     } catch (error: any) {
@@ -295,7 +297,7 @@ router.post('/optimizeExport', authGuard, rateLimit(5, 60 * 60 * 1000), async (r
             return res.status(400).json({ error: 'resumeData is required' })
         }
 
-        const optimized = await optimizeForExport(resumeData)
+        const optimized = await optimizeForExport(resumeData, { id: req.user!.id, email: req.user!.email })
         res.json({ optimized })
     } catch (error) {
         console.error('Export optimization failed', error)
@@ -304,7 +306,7 @@ router.post('/optimizeExport', authGuard, rateLimit(5, 60 * 60 * 1000), async (r
 })
 
 // Header Intelligence
-router.post(['/header-intelligence', '/header-intelligence/'], rateLimit(50, 60 * 60 * 1000), async (req: any, res: any) => {
+router.post(['/header-intelligence', '/header-intelligence/'], optionalAuth, rateLimit(50, 60 * 60 * 1000), async (req: any, res: any) => {
     try {
         const { type, value, context } = req.body;
         console.log(`🧠 [AI] Header Intelligence Request: type=${type}, value=${typeof value === 'string' ? value.slice(0, 50) : 'complex'}`);
@@ -327,7 +329,7 @@ router.post(['/header-intelligence', '/header-intelligence/'], rateLimit(50, 60 
 });
 
 // Topic Summary
-router.post('/topic-summary', rateLimit(20, 60 * 60 * 1000), async (req: any, res: any) => {
+router.post('/topic-summary', optionalAuth, rateLimit(20, 60 * 60 * 1000), async (req: any, res: any) => {
     try {
         const { topic, context } = req.body;
         if (!topic) return res.status(400).json({ error: 'topic is required' });

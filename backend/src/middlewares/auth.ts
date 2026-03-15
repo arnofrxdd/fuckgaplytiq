@@ -65,3 +65,41 @@ export async function authGuard(req: Request, res: Response, next: NextFunction)
         return res.status(401).json({ error: 'Invalid token' })
     }
 }
+
+export async function optionalAuth(req: Request, res: Response, next: NextFunction) {
+    const authHeader = req.headers.authorization
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return next()
+    }
+
+    const token = authHeader.substring(7)
+
+    try {
+        const secret = process.env.SUPABASE_JWT_SECRET
+        if (secret) {
+            try {
+                const decoded = jwt.verify(token, secret) as any
+                if (decoded && decoded.sub) {
+                    req.user = {
+                        id: decoded.sub,
+                        email: decoded.email,
+                        user_metadata: decoded.user_metadata || {},
+                        aud: decoded.aud,
+                    } as any
+                    return next()
+                }
+            } catch (e) {}
+        }
+
+        const decoded = jwt.decode(token) as any
+        if (decoded && decoded.sub) {
+            const { data: { user } } = await supabase.auth.admin.getUserById(decoded.sub).catch(() => ({ data: { user: null } }))
+            if (user) {
+                req.user = user
+            }
+        }
+        next()
+    } catch (error) {
+        next()
+    }
+}

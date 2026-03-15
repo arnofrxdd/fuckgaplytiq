@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { ArrowLeft, Check, Search, Plus, Loader2, Star, Trash2, Sparkles, X, ChevronRight, AlertCircle, Edit2, RefreshCw } from "lucide-react";
 import ResumeRenderer from "../templates/ResumeRenderer";
 import { Editor, EditorProvider, Toolbar, BtnBold, BtnItalic, BtnUnderline, BtnBulletList } from 'react-simple-wysiwyg';
+import { fetchAuthenticatedAI } from "../utils/aiApi";
 import "./form.css";
 import "./education.css"; // Shared Studio Styles
 import "./experience.css"; // Shared Studio Styles
@@ -156,9 +157,8 @@ export default function Skills({ data, setData, templateId, onBack, onNext, onPr
         if (!term) return;
         setShowLoadingPopup(true);
         try {
-            const response = await fetch('/resumy/api/ai/header-intelligence', {
+            const response = await fetchAuthenticatedAI('/resumy/api/ai/header-intelligence', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     type: "skills",
                     value: term,
@@ -197,9 +197,8 @@ export default function Skills({ data, setData, templateId, onBack, onNext, onPr
         if (!force && aiSuggestions.length > 0) return;
         setShowLoadingPopup(true);
         try {
-            const response = await fetch('/resumy/api/ai/header-intelligence', {
+            const response = await fetchAuthenticatedAI('/resumy/api/ai/header-intelligence', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     type: "skills",
                     value: "",

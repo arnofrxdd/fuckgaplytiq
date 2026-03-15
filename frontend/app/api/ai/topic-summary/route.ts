@@ -12,10 +12,13 @@ export async function POST(request: NextRequest) {
 
         console.log(`[AI PROXY] Forwarding topic summary to backend: ${backendUrl} (Topic: ${topic})`);
 
+        const authHeader = request.headers.get('Authorization');
+
         const response = await fetch(backendUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                ...(authHeader ? { 'Authorization': authHeader } : {}),
             },
             body: JSON.stringify(body)
         });

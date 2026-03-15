@@ -285,7 +285,8 @@ router.post('/upload', authGuard, rateLimit(50, 60 * 60 * 1000), imageCompressMi
                     if (text && text.trim().length > 0) {
                         try {
                             console.log(`🧠 Starting immediate AI parse for resume ${resumeId}...`);
-                            const { parsed, confidence, isFallback } = await extractStructuredResume(text, out.meta)
+                            const userContext = (req as any).user ? { id: (req as any).user.id, email: (req as any).user.email } : (userId ? { id: userId } : undefined);
+                            const { parsed, confidence, isFallback } = await extractStructuredResume(text, out.meta, userContext)
                             if (isFallback) {
                                 console.warn(`⚠️ [AI PARSE] Fallback mode used for ${resumeId} due to parsing failure.`);
                             } else {

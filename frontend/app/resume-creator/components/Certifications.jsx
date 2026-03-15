@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { ArrowLeft, Plus, Search, Trash2, Calendar, FileText, Award, Loader2, Check, ChevronDown, ChevronUp } from "lucide-react";
 import { Editor, EditorProvider, Toolbar, BtnBold, BtnItalic, BtnUnderline, BtnBulletList } from 'react-simple-wysiwyg';
+import { fetchAuthenticatedAI } from "../utils/aiApi";
 import "./form.css";
 
 import CompatibilityWarning from "./CompatibilityWarning";
@@ -35,23 +36,13 @@ export default function Certifications({ data, setData, onBack, onNext, isQuickE
         if (!searchTerm) return;
         setIsLoading(true);
         try {
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            const token = session?.access_token;
-
-            const headers = { 'Content-Type': 'application/json' };
-            if (token) headers['Authorization'] = `Bearer ${token}`;
-
-            const API_URL = '/resumy';
-            const res = await fetch(`${API_URL}/api/ai/generate`, {
+            const res = await fetchAuthenticatedAI('/resumy/api/ai/generate', {
                 method: 'POST',
-                headers,
                 body: JSON.stringify({
                     type: 'suggest_certifications',
                     input: { role: searchTerm }
                 })
             });
-
-            if (!res.ok) throw new Error('Failed to fetch suggestions');
             const dataResponse = await res.json();
             if (dataResponse.choices && Array.isArray(dataResponse.choices)) {
                 setSuggestions(dataResponse.choices);

@@ -101,7 +101,10 @@ const CeruleanCircle = ({
             color: SIDEBAR_TEXT,
             display: "flex",
             flexDirection: "column",
-            padding: "var(--theme-page-margin, 52px) var(--theme-page-margin, 35px)",
+            paddingTop: "var(--theme-page-margin, 52px)",
+            paddingBottom: "var(--theme-page-margin, 52px)",
+            paddingLeft: "var(--theme-page-margin, 35px)",
+            paddingRight: "var(--theme-page-margin, 35px)",
             minHeight: "100%",
             position: "relative",
         },
@@ -135,7 +138,10 @@ const CeruleanCircle = ({
             color: "rgba(255,255,255,0.3)",
         },
         sidebarContent: {
-            padding: "var(--theme-page-margin, 28px) var(--theme-page-margin, 26px) var(--theme-page-margin, 40px) var(--theme-page-margin, 26px)",
+            paddingTop: "28px", // Fixed internal spacing
+            paddingRight: "26px",
+            paddingBottom: "var(--theme-page-margin, 40px)",
+            paddingLeft: "26px",
             display: "flex",
             flexDirection: "column",
             gap: "calc(22px * var(--theme-section-margin, 1))",
@@ -189,7 +195,10 @@ const CeruleanCircle = ({
         },
         // NAME HEADER (top of main area)
         headerArea: {
-            padding: "var(--theme-page-margin, 50px) 0 35px 0",
+            paddingTop: "var(--theme-page-margin, 50px)",
+            paddingBottom: "35px", // Fixed internal divider spacing
+            paddingLeft: "var(--theme-page-margin, 40px)",
+            paddingRight: "var(--theme-page-margin, 40px)",
             borderBottom: "2px solid #e8ecf0",
         },
         name: {
@@ -229,7 +238,10 @@ const CeruleanCircle = ({
         },
         // MAIN SECTIONS
         mainContent: {
-            padding: "var(--theme-page-margin, 28px) var(--theme-page-margin, 40px) var(--theme-page-margin, 40px) var(--theme-page-margin, 40px)",
+            paddingTop: "28px", // Fixed internal spacing
+            paddingRight: "var(--theme-page-margin, 40px)",
+            paddingBottom: "var(--theme-page-margin, 40px)",
+            paddingLeft: "40px",
             display: "flex",
             flexDirection: "column",
             gap: "calc(28px * var(--theme-section-margin, 1))",

@@ -53,7 +53,8 @@ export class AIConsumptionTracker {
             if (error) {
                 console.error('[AIConsumptionTracker] Supabase Error:', error.message);
             } else {
-                console.log(`[AIConsumptionTracker] Logged ${log.totalTokens} tokens for ${log.modelName} ($${log.estimatedCostUsd.toFixed(6)})`);
+                const identity = log.userEmail || log.userId || 'Anonymous';
+                console.log(`[AIConsumptionTracker] [${identity}] Logged ${log.totalTokens} tokens for ${log.modelName} ($${log.estimatedCostUsd.toFixed(6)})`);
             }
         } catch (err) {
             console.error('[AIConsumptionTracker] Unexpected Error:', err);

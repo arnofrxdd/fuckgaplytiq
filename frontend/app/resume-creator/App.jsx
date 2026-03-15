@@ -3,31 +3,109 @@ import React, { useState } from "react";
 import Onboarding from "./components/OnboardingRedesign"; // Using the new professional design
 import FormPanel from "./components/FormPanel";   // Make sure this file exists in components
 import { useAnalytics } from "@/lib/analytics";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 
 import "./App.css";
 import "./native-highlight.css";
 
 function App() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   // 1. View State: 'onboarding' | 'editor'
   const [currentView, setCurrentView] = useState("onboarding");
   const [onboardingMode, setOnboardingMode] = useState("welcome"); // 'welcome' | 'new' | 'improve'
   const { trackEvent } = useAnalytics();
-  const searchParams = useSearchParams();
+
+  // URL State Synced to Component State
   const jobId = searchParams.get('jobId');
 
+  // Load Initial State from URL
   React.useEffect(() => {
-    trackEvent('resume_creator_view', 'Resume creator opened', {
-      feature_module: 'resume_creator',
-      funnel_stage: 'viewed'
-    });
-
+    const view = searchParams.get('view') || 'onboarding';
+    const mode = searchParams.get('mode') || 'welcome';
     const resumeId = searchParams.get('resumeId');
-    if (resumeId) {
+
+    console.log("[App] Syncing from URL:", { view, mode, resumeId });
+
+    if ((view === 'editor' || view === 'finalize') && resumeId) {
       setResumeData(prev => ({ ...prev, builder_resume_id: resumeId }));
       setCurrentView("editor");
+    } else {
+      setCurrentView("onboarding");
+      setOnboardingMode(mode);
     }
+
+    // Replace current history entry with normalized state to ensure a stable baseline
+    syncUrl(view, mode, resumeId, view === 'editor' ? searchParams.get('step') : null, true);
+
+    trackEvent('resume_creator_view', 'Resume creator opened', {
+      feature_module: 'resume_creator',
+      funnel_stage: 'viewed',
+      view: view
+    });
   }, []);
+
+  // Listen to Browser Back/Forward Buttons
+  React.useEffect(() => {
+    const handlePopState = (e) => {
+      const params = new URLSearchParams(window.location.search);
+      const view = params.get('view') || 'onboarding';
+      const mode = params.get('mode') || 'welcome';
+      const resumeId = params.get('resumeId');
+
+      if ((view === 'editor' || view === 'finalize') && resumeId) {
+        setResumeData(prev => ({ 
+          ...prev, 
+          builder_resume_id: resumeId,
+        }));
+        setCurrentView("editor");
+      } else {
+        setCurrentView("onboarding");
+        setOnboardingMode(mode);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Sync state TO URL without triggering a reload
+  const syncUrl = (view, mode, id, step, replace = false) => {
+    const params = new URLSearchParams();
+    
+    // Core URL logic: View determines what high level page we are on
+    params.set('view', view); 
+
+    if (view === 'onboarding' && mode) params.set('mode', mode);
+    if (id) params.set('resumeId', id);
+    if (view === 'editor' && step) params.set('step', step);
+    if (jobId) params.set('jobId', jobId);
+
+    // Flow tracking for onboarding
+    const flow = searchParams.get('flow');
+    const importId = searchParams.get('importId');
+    if (view === 'onboarding') {
+      if (flow) params.set('flow', flow);
+      if (importId) params.set('importId', importId);
+    }
+
+    // Normalize comparison to prevent redundant pushes
+    const currentParams = new URLSearchParams(window.location.search);
+    currentParams.sort();
+    const newParams = new URLSearchParams(params.toString());
+    newParams.sort();
+
+    const newUrl = `/resumy${pathname}?${params.toString()}`;
+    
+    if (currentParams.toString() !== newParams.toString()) {
+      if (replace) {
+        window.history.replaceState({ path: newUrl }, '', newUrl);
+      } else {
+        window.history.pushState({ path: newUrl }, '', newUrl);
+      }
+    }
+  };
 
 
   // Lock page scroll for the entire resume creator session and restore on exit
@@ -152,6 +230,7 @@ function App() {
     // 3. Optional Finish
     if (shouldFinish) {
       setCurrentView("editor");
+      syncUrl('editor', null, updatedData.builder_resume_id || resumeData.builder_resume_id, 1);
       trackEvent('resume_editor_started', 'Switched from onboarding to editor', {
         feature_module: 'resume_creator',
         funnel_stage: 'started'
@@ -166,10 +245,31 @@ function App() {
       {currentView === "onboarding" && (
         <Onboarding
           mode={onboardingMode}
+          flow={searchParams.get('flow')}
+          importId={searchParams.get('importId')}
           data={resumeData}
           onComplete={handleOnboardingComplete}
           onUpdateData={handleUpdateData}
           onBack={null}
+          onModeChange={(newMode, extra = {}) => {
+            setOnboardingMode(newMode);
+            
+            // Build final params for sync
+            const flow = extra.flow || searchParams.get('flow');
+            const importId = extra.importId || searchParams.get('importId');
+            
+            const params = new URLSearchParams(window.location.search);
+            params.set('view', 'onboarding');
+            params.set('mode', newMode);
+            if (flow) params.set('flow', flow);
+            else params.delete('flow');
+            if (importId) params.set('importId', importId);
+            else params.delete('importId');
+            if (jobId) params.set('jobId', jobId);
+
+            const newUrl = `/resumy${pathname}?${params.toString()}`;
+            window.history.pushState({ path: newUrl }, '', newUrl);
+          }}
         />
       )}
 
@@ -238,7 +338,9 @@ function App() {
               title: project.title
             });
             if (project.template_id) setSelectedTemplate(project.template_id);
+            syncUrl('editor', null, project.id, 1);
           }}
+          onSyncUrl={syncUrl}
         />
       )}
 

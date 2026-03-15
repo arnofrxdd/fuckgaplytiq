@@ -92,10 +92,15 @@ const CreativeMarketing = ({
         },
         header: {
             background: "var(--theme-color, #2d5a7b)",
-            padding: "50px 40px",
+            paddingTop: "var(--theme-page-margin, 50px)",
+            paddingLeft: "var(--theme-page-margin, 40px)",
+            paddingRight: "var(--theme-page-margin, 40px)",
+            paddingBottom: "50px",
             textAlign: "center",
             color: "white",
             marginBottom: "0",
+            boxSizing: "border-box",
+            WebkitPrintColorAdjust: "exact",
         },
         name: {
             fontSize: "calc(42px * var(--theme-font-scale, 1))",
@@ -119,32 +124,35 @@ const CreativeMarketing = ({
             minHeight: 0,
             padding: "0",
             position: "relative",
-            marginTop: "20px", // Clear gap after header
+            marginTop: "20px", 
+            boxSizing: "border-box",
         },
         leftColumn: {
             width: "50%",
             boxSizing: "border-box",
-            paddingBottom: "var(--theme-page-margin, 40px)",
-            paddingTop: "40px",
+            paddingTop: "0",
             paddingLeft: "var(--theme-page-margin, 40px)",
             paddingRight: "var(--theme-page-margin, 40px)",
+            paddingBottom: "var(--theme-page-margin, 40px)",
             display: "flex",
             flexDirection: "column",
             gap: "calc(35px * var(--theme-section-margin, 1))",
             textAlign: "right",
+            overflow: "visible",
         },
         rightColumn: {
             width: "50%",
             boxSizing: "border-box",
-            paddingBottom: "var(--theme-page-margin, 40px)",
-            paddingTop: "40px",
+            paddingTop: "0",
             paddingLeft: "var(--theme-page-margin, 40px)",
             paddingRight: "var(--theme-page-margin, 40px)",
+            paddingBottom: "var(--theme-page-margin, 40px)",
             display: "flex",
             flexDirection: "column",
             gap: "calc(35px * var(--theme-section-margin, 1))",
             borderLeft: "2px solid #e2e8f0",
             position: "relative",
+            overflow: "visible",
         },
         sectionTitle: {
             fontSize: "calc(18px * var(--theme-font-scale, 1))",
@@ -155,6 +163,8 @@ const CreativeMarketing = ({
             marginBottom: "calc(15px * var(--theme-paragraph-margin, 1))",
             position: "relative",
             fontFamily: "var(--theme-font, 'Lora', serif)",
+            lineHeight: "1.1",
+            margin: "0",
         },
         skillBarContainer: {
             display: "flex",
@@ -237,17 +247,29 @@ const CreativeMarketing = ({
                     <div style={{
                         position: "absolute",
                         [align === 'right' ? 'right' : 'left']: isLeft
-                            ? "calc(-1 * (var(--theme-page-margin, 40px) + 8px))"
-                            : "calc(-1 * (var(--theme-page-margin, 40px) + 10px))",
-                        top: isLeft ? "2px" : "8px",
-                        width: "16px",
-                        height: "16px",
+                            ? "calc(-1 * (var(--theme-page-margin, 40px) + 11px))"
+                            : "calc(-1 * (var(--theme-page-margin, 40px) + 11px))",
+                        top: "4px",
+                        width: "22px",
+                        height: "22px",
                         borderRadius: "50%",
-                        background: "var(--theme-color, #2d5a7b)",
-                        border: "4px solid white",
-                        zIndex: 10,
-                        boxShadow: "0 0 0 2px #e2e8f0"
-                    }} />
+                        backgroundColor: "white",
+                        border: "1.5px solid #e2e8f0",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        zIndex: 100,
+                        boxSizing: "border-box",
+                        overflow: "visible"
+                    }}>
+                        <div style={{
+                            width: "14px",
+                            height: "14px",
+                            borderRadius: "50%",
+                            backgroundColor: "var(--theme-color, #2d5a7b)",
+                            WebkitPrintColorAdjust: "exact"
+                        }} />
+                    </div>
                 )}
                 <h3 style={{ ...styles.sectionTitle, textAlign: align }}>{displayTitle}</h3>
             </div>
@@ -1147,7 +1169,7 @@ const CreativeMarketing = ({
                 <SortableContext items={[...activeLeftSections, ...activeRightSections]} strategy={verticalListSortingStrategy}>
                     {showPageBreaks && pages ? (
                         pages.map((page, i) => (
-                            <div key={i} style={styles.page}>
+                            <div key={i} className="resume-page" style={styles.page}>
                                 {i === 0 && <Header />}
                                 <div style={{ ...styles.layoutBody, flex: 1, minHeight: 0 }}>
                                     <div style={styles.leftColumn}>
@@ -1162,7 +1184,7 @@ const CreativeMarketing = ({
                             </div>
                         ))
                     ) : (
-                        <div style={{ ...styles.page, height: "auto", minHeight: "100%" }}>
+                        <div className="resume-page" style={{ ...styles.page, height: "auto", minHeight: "100%" }}>
                             <Header />
                             <div style={styles.layoutBody}>
                                 <div style={styles.leftColumn}>

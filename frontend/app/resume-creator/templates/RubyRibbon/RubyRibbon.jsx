@@ -181,7 +181,10 @@ const RubyRibbon = ({
         sidebarColumn: {
             width: SIDEBAR_WIDTH,
             background: SIDEBAR_BG,
-            padding: "var(--theme-page-margin, 22px) var(--theme-page-margin, 18px) var(--theme-page-margin, 40px) var(--theme-page-margin, 22px)",
+            paddingTop: "22px", // Fixed internal spacing from header
+            paddingLeft: "var(--theme-page-margin, 22px)",
+            paddingRight: "18px", // Internal gutter
+            paddingBottom: "var(--theme-page-margin, 40px)",
             display: "flex",
             flexDirection: "column",
             gap: "calc(22px * var(--theme-section-margin, 1))",
@@ -227,7 +230,10 @@ const RubyRibbon = ({
         mainColumn: {
             width: MAIN_WIDTH,
             background: MAROON,
-            padding: "calc(22px * var(--theme-page-margin-scale, 1)) 0 var(--theme-page-margin, 40px) 0",
+            paddingTop: "22px", // Fixed internal spacing from header
+            paddingRight: "0",
+            paddingBottom: "var(--theme-page-margin, 40px)",
+            paddingLeft: "0",
             display: "flex",
             flexDirection: "column",
             gap: "calc(25px * var(--theme-section-margin, 1))",

@@ -161,24 +161,19 @@ export const formatSocialLink = (platform, value) => {
     return `https://${domains[platform]}${value.replace(/@/g, '')}`;
 };
 
+import { fetchAuthenticatedAI } from '../utils/aiApi';
+
 // --- UTILITY: AI Smart Advice (GPT-4) ---
 export const getAIHeaderAdvice = async (type, value, context = {}) => {
     try {
         console.log(`[AI DEBUG] Requesting: ${type} for "${value}"`, context);
-        const response = await fetch('/resumy/api/ai/header-intelligence', {
+        const response = await fetchAuthenticatedAI('/resumy/api/ai/header-intelligence', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ type, value, context })
         });
         
         if (!response.ok) {
             console.error(`[AI DEBUG] HTTP Error: ${response.status}`);
-            return value || null;
-        }
-
-        const contentType = response.headers.get("content-type");
-        if (!contentType || !contentType.includes("application/json")) {
-            console.error(`[AI DEBUG] Expected JSON but got ${contentType}`);
             return value || null;
         }
 

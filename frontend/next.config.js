@@ -16,7 +16,7 @@ const nextConfig = {
   },
   async rewrites() {
     const isDev = process.env.NODE_ENV === 'development';
-    const backendUrl = isDev ? 'http://localhost:3001' : 'http://resumy-backend:3001';
+    const backendUrl = isDev ? 'http://127.0.0.1:3001' : 'http://resumy-backend:3001';
     
     return [
       {

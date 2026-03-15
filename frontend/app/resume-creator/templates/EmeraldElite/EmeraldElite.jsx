@@ -173,7 +173,10 @@ const EmeraldElite = ({
         sidebarColumn: {
             width: "30%",
             background: SIDEBAR_BG,
-            padding: "var(--theme-page-margin, 24px) var(--theme-page-margin, 18px) var(--theme-page-margin, 40px) var(--theme-page-margin, 18px)",
+            paddingTop: "24px", // Fixed internal spacing from header
+            paddingLeft: "var(--theme-page-margin, 24px)",
+            paddingRight: "18px", // Internal gutter
+            paddingBottom: "var(--theme-page-margin, 40px)",
             display: "flex",
             flexDirection: "column",
             gap: "calc(22px * var(--theme-section-margin, 1))",
@@ -183,7 +186,10 @@ const EmeraldElite = ({
         mainColumn: {
             flex: 1,
             background: "white",
-            padding: "var(--theme-page-margin, 24px) var(--theme-page-margin, 28px) var(--theme-page-margin, 40px) var(--theme-page-margin, 28px)",
+            paddingTop: "24px", // Fixed internal spacing from header
+            paddingRight: "var(--theme-page-margin, 28px)",
+            paddingBottom: "var(--theme-page-margin, 40px)",
+            paddingLeft: "28px", // Fixed internal spacing from sidebar
             display: "flex",
             flexDirection: "column",
             gap: "calc(22px * var(--theme-section-margin, 1))",
@@ -196,8 +202,10 @@ const EmeraldElite = ({
             color: "#1a1a1a",
             letterSpacing: "1.5px",
             textTransform: "uppercase",
+            marginTop: "0",
             marginBottom: "10px",
             fontFamily: "var(--theme-font, 'Georgia', serif)",
+            boxSizing: "border-box",
         },
         // Main section title: uppercase bold, slightly larger
         mainSectionTitle: {
@@ -206,8 +214,10 @@ const EmeraldElite = ({
             color: "#1a1a1a",
             letterSpacing: "2px",
             textTransform: "uppercase",
+            marginTop: "0",
             marginBottom: "12px",
             fontFamily: "var(--theme-font, 'Georgia', serif)",
+            boxSizing: "border-box",
         },
         // Contact items
         contactItem: {

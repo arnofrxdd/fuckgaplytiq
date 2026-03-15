@@ -81,20 +81,25 @@ const AuraPastel = ({
         },
         headerArea: {
             position: "relative",
-            padding: "var(--theme-page-margin, 40px) var(--theme-page-margin, 40px) 20px var(--theme-page-margin, 40px)",
+            paddingTop: "var(--theme-page-margin, 40px)",
+            paddingLeft: "var(--theme-page-margin, 40px)",
+            paddingRight: "var(--theme-page-margin, 40px)",
+            paddingBottom: "20px",
             overflow: "hidden",
             minHeight: "110px",
+            boxSizing: "border-box",
         },
         blobShape: {
             position: "absolute",
-            top: "-30px",
-            left: "-30px",
+            top: "calc(var(--theme-page-margin, 40px) - 70px)", // Float with name
+            left: "calc(var(--theme-page-margin, 40px) - 70px)", // Float with name
             width: "200px",
             height: "190px",
             background: "#e8eaed",
             borderRadius: "62% 38% 54% 46% / 60% 44% 56% 40%",
             zIndex: 0,
             opacity: 0.8,
+            WebkitPrintColorAdjust: "exact",
         },
         headerContent: {
             position: "relative",
@@ -120,11 +125,18 @@ const AuraPastel = ({
             display: "flex",
             flex: 1,
             minHeight: 0,
-            padding: "0 0 var(--theme-page-margin, 40px) 0",
+            paddingTop: "0",
+            paddingLeft: "0",
+            paddingRight: "0",
+            paddingBottom: "var(--theme-page-margin, 40px)",
+            boxSizing: "border-box",
         },
         sidebarColumn: {
             width: "31%",
-            padding: "0 var(--theme-page-margin, 40px) 0 var(--theme-page-margin, 40px)",
+            paddingTop: "0",
+            paddingLeft: "var(--theme-page-margin, 40px)",
+            paddingRight: "30px",
+            paddingBottom: "0",
             display: "flex",
             flexDirection: "column",
             gap: "calc(22px * var(--theme-section-margin, 1))",
@@ -133,15 +145,20 @@ const AuraPastel = ({
         },
         mainColumn: {
             flex: 1,
-            padding: "0 var(--theme-page-margin, 40px) 0 var(--theme-page-margin, 40px)",
+            paddingTop: "0",
+            paddingLeft: "30px",
+            paddingRight: "var(--theme-page-margin, 40px)",
+            paddingBottom: "0",
             display: "flex",
             flexDirection: "column",
             gap: "calc(24px * var(--theme-section-margin, 1))",
+            boxSizing: "border-box",
         },
         sectionTitle: {
             fontSize: "calc(17px * var(--theme-font-scale, 1))",
             fontWeight: "700",
             color: "#1a2332",
+            marginTop: "0",
             marginBottom: "14px",
             fontFamily: "var(--theme-font, 'Georgia', serif)",
             textTransform: "lowercase",
@@ -151,6 +168,7 @@ const AuraPastel = ({
             fontSize: "calc(15px * var(--theme-font-scale, 1))",
             fontWeight: "700",
             color: "#1a2332",
+            marginTop: "0",
             marginBottom: "12px",
             fontFamily: "var(--theme-font, 'Georgia', serif)",
             textTransform: "lowercase",
@@ -957,7 +975,7 @@ const AuraPastel = ({
                 <SortableContext items={[...activeMainSections, ...activeSidebarSections]} strategy={verticalListSortingStrategy}>
                     {showPageBreaks && pages ? (
                         pages.map((page, i) => (
-                            <div key={i} style={{ ...styles.page, height: "297mm", minHeight: "unset", overflow: "hidden" }}>
+                            <div key={i} className="resume-page" style={{ ...styles.page, height: "297mm", minHeight: "unset", overflow: "hidden" }}>
                                 {i === 0 && <Header />}
                                 <div style={{ ...styles.layoutBody, flex: 1 }}>
                                     <div style={{ ...styles.sidebarColumn, display: "flex", flexDirection: "column" }}>
@@ -972,7 +990,7 @@ const AuraPastel = ({
                             </div>
                         ))
                     ) : (
-                        <div style={{ ...styles.page, height: "auto", minHeight: "100%" }}>
+                        <div className="resume-page" style={{ ...styles.page, height: "auto", minHeight: "100%" }}>
                             <Header />
                             <div style={styles.layoutBody}>
                                 <div style={{ ...styles.sidebarColumn, display: "flex", flexDirection: "column" }}>
