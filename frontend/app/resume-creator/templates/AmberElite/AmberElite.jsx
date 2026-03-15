@@ -1347,7 +1347,7 @@ const AmberElite = ({
                 <SortableContext items={[...activeSidebarSections, ...activeMainSections]} strategy={verticalListSortingStrategy}>
                     {showPageBreaks && pages ? (
                         pages.map((page, i) => (
-                            <div key={i} style={styles.page}>
+                            <div key={i} className="resume-page" style={styles.page}>
                                 {/* SIDEBAR */}
                                 <div style={styles.sidebar}>
                                     <div style={styles.sidebarInner} data-column-id="sidebar">
@@ -1375,7 +1375,7 @@ const AmberElite = ({
                             </div>
                         ))
                     ) : (
-                        <div style={{ ...styles.page, height: "auto", minHeight: "297mm" }}>
+                        <div className="resume-page" style={{ ...styles.page, height: "auto", minHeight: "297mm" }}>
                             {/* SIDEBAR */}
                             <div style={{ ...styles.sidebar, minHeight: "100%" }}>
                                 <div style={styles.sidebarInner} data-column-id="sidebar">

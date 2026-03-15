@@ -1,4 +1,4 @@
-﻿import React, { useRef } from "react";
+import React, { useRef } from "react";
 import { DndContext } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import SectionWrapper from "../../components/SectionWrapper";
@@ -852,7 +852,7 @@ const StrategicLeader = ({
                 <SortableContext items={activeSections} strategy={verticalListSortingStrategy}>
                     {showPageBreaks && pages ? (
                         pages.map((page, i) => (
-                            <div key={i} style={styles.page}>
+                            <div key={i} className="resume-page" style={styles.page}>
                                 {i === 0 && <Header />}
                                 {renderZone(`main-p${i}`, page.main, { flex: 1 })}
                                 <div style={{ position: "absolute", bottom: "15px", right: "40px", fontSize: "10px", opacity: 0.5 }}>Page {i + 1}</div>

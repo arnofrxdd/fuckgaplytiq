@@ -3,6 +3,7 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 import { safeJSONParse } from '../../../shared/utils'
+import { AIConsumptionTracker } from './aiConsumptionTracker'
 
 // Initialize OpenAI with proper error checking
 // Initialize OpenAI with unification of keys
@@ -74,7 +75,7 @@ const getResumeAIClient = () => {
  * - generate_summary: input { text, role? }
  *   System: "You are a professional career coach. Given the resume text, produce 3 short professional summary variants tailored to the target role. Return JSON array."
  */
-export async function generateVariants(type: string, input: any): Promise<string[]> {
+export async function generateVariants(type: string, input: any, user?: { id?: string; email?: string }): Promise<string[]> {
     console.warn('⚠️ generateVariants DISABLED (OpenAI disabled)');
     return [];
 }
@@ -82,7 +83,7 @@ export async function generateVariants(type: string, input: any): Promise<string
 /**
  * Parse resume text into structured data
  */
-export async function parseResumeText(text: string, originalScore?: number, isExternal: boolean = true): Promise<{ data: any; confidence: number }> {
+export async function parseResumeText(text: string, originalScore?: number, isExternal: boolean = true, user?: { id?: string; email?: string }): Promise<{ data: any; confidence: number }> {
     if (!process.env.GROQ_API_KEY && !process.env.OPENAI_API_KEY) throw new Error('AI API Key not set')
 
     // If it's an external resume, calculate a deterministic target score
@@ -239,6 +240,22 @@ Be thorough and extract ALL content present in the resume, but keep its quality 
             response_format: { type: 'json_object' },
             max_tokens: 8000
         });
+
+        // Log Usage
+        if (resp.usage) {
+            AIConsumptionTracker.logUsage({
+                userId: user?.id,
+                userEmail: user?.email,
+                featureName: 'resume_parse',
+                modelName: model,
+                provider: mistral ? 'mistral' : (groq ? 'groq' : 'openai'),
+                promptTokens: resp.usage.prompt_tokens,
+                completionTokens: resp.usage.completion_tokens,
+                totalTokens: resp.usage.total_tokens,
+                estimatedCostUsd: AIConsumptionTracker.calculateCost(model, resp.usage.prompt_tokens, resp.usage.completion_tokens),
+                metadata: { isExternal }
+            });
+        }
     } catch (err: any) {
         console.error('❌ AI API ERROR:', err?.response?.data || err?.message || err);
         throw err;
@@ -283,8 +300,8 @@ export async function improveExperience(bullets: string[], role: string, company
 /**
  * Generate professional summary
  */
-export async function generateSummary(resumeText: string, targetRole?: string): Promise<string[]> {
-    return generateVariants('generate_summary', { text: resumeText, role: targetRole || '' })
+export async function generateSummary(resumeText: string, targetRole?: string, user?: { id?: string; email?: string }): Promise<string[]> {
+    return generateVariants('generate_summary', { text: resumeText, role: targetRole || '' }, user)
 }
 
 /**
@@ -416,7 +433,7 @@ export async function generateProfessionalHeadline(resumeData: any): Promise<str
 }
 
 // --- Header Intelligence ---
-export async function getHeaderIntelligence(type: string, value: any, context: any = {}): Promise<string> {
+export async function getHeaderIntelligence(type: string, value: any, context: any = {}, user?: { id?: string; email?: string }): Promise<string> {
     if (!groq) {
         console.warn('⚠️ getHeaderIntelligence DISABLED (Groq not configured)');
         return '';
@@ -475,6 +492,22 @@ Return ONLY a valid JSON array of strings exactly matching this schema:
             temperature: isJson ? 0.7 : 0.3,
             response_format: isJson ? { type: "json_object" } : undefined
         });
+
+        if (resp.usage) {
+            AIConsumptionTracker.logUsage({
+                userId: user?.id,
+                userEmail: user?.email,
+                featureName: `header_intel_${type}`,
+                modelName: 'llama-3.1-8b-instant',
+                provider: 'groq',
+                promptTokens: resp.usage.prompt_tokens,
+                completionTokens: resp.usage.completion_tokens,
+                totalTokens: resp.usage.total_tokens,
+                estimatedCostUsd: AIConsumptionTracker.calculateCost('llama-3.1-8b-instant', resp.usage.prompt_tokens, resp.usage.completion_tokens),
+                metadata: { type }
+            });
+        }
+
         return resp.choices[0]?.message?.content?.trim() || value;
     } catch (e: any) {
         console.error('Groq getHeaderIntelligence Error:', e?.message || e);
@@ -482,7 +515,7 @@ Return ONLY a valid JSON array of strings exactly matching this schema:
     }
 }
 
-export async function getTopicSummary(topic: string, context: string = ""): Promise<string> {
+export async function getTopicSummary(topic: string, context: string = "", user?: { id?: string; email?: string }): Promise<string> {
     if (!groq) {
         console.warn('⚠️ getTopicSummary DISABLED (Groq not configured)');
         return '';
@@ -495,6 +528,22 @@ export async function getTopicSummary(topic: string, context: string = ""): Prom
             max_tokens: 100,
             temperature: 0.7
         });
+
+        if (resp.usage) {
+            AIConsumptionTracker.logUsage({
+                userId: user?.id,
+                userEmail: user?.email,
+                featureName: 'topic_summary',
+                modelName: 'llama-3.1-8b-instant',
+                provider: 'groq',
+                promptTokens: resp.usage.prompt_tokens,
+                completionTokens: resp.usage.completion_tokens,
+                totalTokens: resp.usage.total_tokens,
+                estimatedCostUsd: AIConsumptionTracker.calculateCost('llama-3.1-8b-instant', resp.usage.prompt_tokens, resp.usage.completion_tokens),
+                metadata: { topic }
+            });
+        }
+
         return resp.choices[0]?.message?.content?.trim() || "";
     } catch (e: any) {
         console.error('Groq getTopicSummary Error:', e?.message || e);

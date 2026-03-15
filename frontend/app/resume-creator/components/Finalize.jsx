@@ -673,25 +673,28 @@ export default function Finalize({ data, setData, onChangeTemplate, onDownloadPD
                 pdf_mode: pdfMode
             }
         });
-        try {
-            // Target the resume wrapper in the preview area
+          try {
+            // ── 0. Find the live resume element ──────────────────────────────────────
             let resumeElement = document.querySelector('.dashboard-preview-area .resume-theme-provider');
-            if (!resumeElement) {
-                resumeElement = document.querySelector('.resume-theme-provider');
-            }
-            if (!resumeElement) throw new Error("Resume center preview not found");
+            if (!resumeElement) resumeElement = document.querySelector('.resume-theme-provider');
+            if (!resumeElement) throw new Error('Resume preview element not found');
 
-            // 1. Snapshot the HTML
-            // We clone it to avoid messing with the live preview while capturing
+            // ── 1. Detect rendering mode from the DOM class ───────────────────────────
+            // ResumeRenderer adds 'paged-mode' when showPageBreaks=true, 'seamless-mode' when false.
+            const isPagedMode = resumeElement.classList.contains('paged-mode');
+            const childCount = resumeElement.children?.length || 0;
+            console.log(`[PDF-FRONTEND] Mode detected: ${isPagedMode ? 'PAGED' : 'SEAMLESS'}. Root children: ${childCount}`);
+
+            // ── 2. Clone the element (don't mutate live DOM) ──────────────────────────
             const clone = resumeElement.cloneNode(true);
 
-            // 2. Handle Blob Images (Critical for uploaded photos)
+            // ── 3. Convert any blob: image URLs to base64 (required for Puppeteer) ────
             const images = Array.from(clone.querySelectorAll('img'));
             for (const img of images) {
                 if (img.src.startsWith('blob:')) {
                     try {
-                        const response = await fetch(img.src);
-                        const blob = await response.blob();
+                        const res = await fetch(img.src);
+                        const blob = await res.blob();
                         const reader = new FileReader();
                         const base64 = await new Promise((resolve) => {
                             reader.onloadend = () => resolve(reader.result);
@@ -699,164 +702,154 @@ export default function Finalize({ data, setData, onChangeTemplate, onDownloadPD
                         });
                         img.src = base64;
                     } catch (e) {
-                        console.warn("Failed to convert blob image to base64", e);
+                        console.warn('[PDF-FRONTEND] Blob image conversion failed', e);
                     }
                 }
             }
 
-            // 3. Capture Styles
+            // ── 4. Capture inline <style> tags only ───────────────────────────────────
+            // We skip <link rel="stylesheet"> intentionally: those point to the Next.js
+            // app CSS (editor layout) which sets body { overflow: hidden } and breaks
+            // multi-page PDF rendering in Puppeteer.
             const styleTags = Array.from(document.querySelectorAll('style'))
-                .map(style => style.outerHTML)
+                .map(s => s.outerHTML)
                 .join('\n');
 
-            const linkTags = Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
-                .map(link => link.outerHTML)
-                .join('\n');
-
-            // 3b. Determine Active Font for Google Fonts injection
+            // ── 5. Determine active font and inject Google Fonts link ─────────────────
             const activeTemplateIdForPdf = templateId || data.templateId || 'unified-template';
             const templateLayoutSettings = data.templateLayouts?.[activeTemplateIdForPdf] || {};
             const templateConfig = templatesConfig.find(t => t.id === activeTemplateIdForPdf) || {};
-            
-            const rawFont = templateLayoutSettings.designSettings?.fontFamily || 
-                           templateLayoutSettings.fontFamily || 
-                           designSettings.fontFamily || 
-                           templateConfig.defaultFont || 
-                           "Plus Jakarta Sans";
 
-            const fontName = rawFont.split(',')[0].replace(/['"]/g, '').trim();
-            const fontConfig = RESUME_FONTS.find(f => f.name === fontName);
-            const fontVariable = fontConfig ? fontConfig.variable : `--font-${fontName.toLowerCase().replace(/\s+/g, '-')}`;
-            
-            const formattedFontName = fontName.replace(/\s+/g, '+');
-            const googleFontLink = `<link href="https://fonts.googleapis.com/css2?family=${formattedFontName}:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">`;
+            const rawFont =
+                templateLayoutSettings.designSettings?.fontFamily ||
+                templateLayoutSettings.fontFamily ||
+                designSettings.fontFamily ||
+                templateConfig.defaultFont ||
+                'Plus Jakarta Sans';
 
-            // 4. Construct PDF-specific CSS
+            const fontName = rawFont.split(',')[0].replace(/['\"]/g, '').trim();
+
+            const fontVariable = `--font-${fontName.toLowerCase().replace(/\s+/g, '-')}`;
+            const googleFontLink = `<link href="https://fonts.googleapis.com/css2?family=${fontName.replace(/\s+/g, '+')}:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">`;
+
+            // ── 6. Build PDF Engine V3 Styles ────────────────────────────────────────
+            // Instead of hardcoding print-media fixes, we use Screen-Fidelity rules.
+            const pagedModeCSS = `
+                /* ── V3 PAGED MODE (A4 Pages) ── */
+                @page { margin: 0; size: A4; }
+
+                .resume-page, 
+                [style*="height: 297mm"], 
+                [style*="height:297mm"],
+                [style*="height: 297mm;"],
+                [style*="height:297mm;"] {
+                    height: 297mm !important;
+                    min-height: 297mm !important;
+                    max-height: 297mm !important;
+                    width: 210mm !important;
+                    box-shadow: none !important;
+                    page-break-after: always !important;
+                    break-after: page !important;
+                    overflow: hidden !important;
+                    position: relative !important;
+                    background: white !important;
+                }
+
+                /* Ensure the last page doesn't cause an extra empty page */
+                .resume-page:last-child {
+                    page-break-after: avoid !important;
+                    break-after: avoid !important;
+                }
+            `;
+
+            const seamlessModeCSS = `
+                /* V3 SEAMLESS MODE */
+                .resume-theme-provider {
+                    display: block !important;
+                    width: 210mm !important;
+                    height: auto !important;
+                }
+            `;
+
             const pdfStyles = `
                 <style>
-                    /* Map font variable for PDF */
-                    :root {
-                        ${fontVariable}: '${fontName}', sans-serif;
-                    }
-
-                    /* Reset for PDF */
-                    @page { margin: 0; size: auto; }
-                    html, body { 
-                        margin: 0 !important; 
-                        padding: 0 !important; 
-                        background: white !important; 
-                        overflow: hidden !important;
-                        -webkit-print-color-adjust: exact;
-                        print-color-adjust: exact;
-                    }
-
-                    /* Root Provider Overrides */
-                    .resume-theme-provider {
+                    :root { ${fontVariable}: '${fontName}', sans-serif; }
+                    
+                    /* Universal Screen-Fidelity Resets */
+                    html, body {
+                        margin: 0 !important;
+                        padding: 0 !important;
+                        background: white !important;
                         width: 210mm !important;
-                        min-height: 297mm !important;
                         height: auto !important;
+                        display: block !important;
+                        overflow: visible !important;
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
+                    }
+
+                    .resume-theme-provider {
+                        display: block !important;
+                        width: 210mm !important;
                         margin: 0 !important;
                         padding: 0 !important;
                         box-shadow: none !important;
-                        transform: none !important;
+                        background: white !important;
+                        height: auto !important;
                         overflow: visible !important;
-                        display: block !important; /* Reset from grid if set */
-                    }
-
-                    /* Important: Target all nested elements that look like A4 pages */
-                    .resume-theme-provider [style*="height: 297mm"],
-                    .resume-theme-provider [style*="height:297mm"],
-                    .resume-theme-provider .resume-page {
-                        height: 297mm !important;
-                        max-height: 297mm !important;
-                        overflow: hidden !important;
-                        margin: 0 !important;
-                        box-shadow: none !important;
-                        box-sizing: border-box !important;
                         position: relative !important;
                     }
 
-                    .resume-theme-provider.paged-mode [style*="height: 297mm"]:not(:last-child),
-                    .resume-theme-provider.paged-mode [style*="height:297mm"]:not(:last-child),
-                    .resume-theme-provider.paged-mode .resume-page:not(:last-child) {
-                        page-break-after: always !important;
-                        break-after: page !important;
-                    }
+                    ${isPagedMode ? pagedModeCSS : seamlessModeCSS}
 
-                    .resume-theme-provider.paged-mode [style*="height: 297mm"]:last-child,
-                    .resume-theme-provider.paged-mode [style*="height:297mm"]:last-child,
-                    .resume-theme-provider.paged-mode .resume-page:last-child {
-                        page-break-after: avoid !important;
-                        break-after: avoid !important;
-                        margin-bottom: 0 !important;
-                    }
-
-                    /* HIDE ALL UI JUNK */
-                    .edit-overlay, 
-                    .drag-handle-overlay,
-                    .add-section-btn,
-                    .section-controls,
-                    .page-guides-overlay,
-                    .page-height-marker,
-                    .spell-popup,
-                    .resume-measurer,
-                    [class*="DragOverlay"],
-                    button,
-                    [class*="drag-handle"],
-                    [class*="AddSection"],
-                    [class*="SectionControls"] {
+                    /* Advanced UI Stripping */
+                    .edit-overlay, .drag-handle-overlay, .add-section-btn, .section-controls,
+                    .page-guides-overlay, .page-height-marker, .spell-popup, .resume-measurer,
+                    [class*="DragOverlay"], button, [class*="drag-handle"],
+                    [class*="AddSection"], [class*="SectionControls"], .page-height-marker {
                         display: none !important;
                         opacity: 0 !important;
                         visibility: hidden !important;
-                        height: 0 !important;
-                        width: 0 !important;
-                        margin: 0 !important;
-                        padding: 0 !important;
-                        pointer-events: none !important;
                     }
-
-                    /* Disable Spell Check Effects */
+                    
                     .spell-error-word {
                         text-decoration: none !important;
                         border: none !important;
                         background: transparent !important;
                     }
 
-                    /* Reset Draggable Overlays */
                     .draggable-section {
                         transform: none !important;
-                        opacity: 1 !important;
-                        visibility: visible !important;
+                        transition: none !important;
                     }
                 </style>
             `;
 
             const fullHtml = `
                 <!DOCTYPE html>
-                <html class="${document.documentElement.className}">
+                <html>
                 <head>
                     <meta charset="utf-8">
-                    <title>${data.personal?.name || 'Resume'}</title>
+                    <title>Resume Export</title>
                     <base href="${window.location.origin}/" />
                     ${googleFontLink}
-                    ${linkTags}
                     ${styleTags}
                     ${pdfStyles}
                 </head>
-                <body>
+                <body class="pdf-export-body">
                     ${clone.outerHTML}
                 </body>
                 </html>
             `;
 
-            // 5. PDF Options
-            const pdfOptions = {
-                format: 'A4'
-            };
+            // ── 8. PDF options  ───────────────────────────────────────────────────────
+            // Paged   → format: A4   (Puppeteer paginates content into A4 pages)
+            // Seamless → height: auto (backend measures content height → single-page PDF)
+            const pdfOptions = isPagedMode
+                ? { format: 'A4' }
+                : { height: 'auto' };
 
-            if (pdfMode === 'full') {
-                pdfOptions.height = 'auto'; // Will be calculated by backend
-            }
+            console.log(`[PDF-FRONTEND] Sending to backend — mode: ${isPagedMode ? 'PAGED' : 'SEAMLESS'}, HTML: ${fullHtml.length} bytes`);
 
             // 6. Request Generation
             const response = await fetch('/resumy/api/pdf/generate', {

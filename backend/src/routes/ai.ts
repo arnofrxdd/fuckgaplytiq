@@ -61,7 +61,7 @@ router.post('/generate', authGuard, rateLimit(20, 60 * 60 * 1000), async (req, r
 
         if (jobErr) console.warn('Failed to create ai_job:', jobErr)
 
-        const choices = await generateVariants(type, input)
+        const choices = await generateVariants(type, input, { id: userId, email: req.user!.email })
 
         // update job with result
         if (jobData) {
@@ -113,7 +113,7 @@ router.post('/parseResume', rateLimit(5, 60 * 60 * 1000), imageCompressMiddlewar
             return res.status(400).json({ error: 'Could not extract text from file' })
         }
 
-        const { parsed: parsedData, confidence } = await extractStructuredResume(text)
+        const { parsed: parsedData, confidence } = await extractStructuredResume(text, null, req.user ? { id: req.user.id, email: req.user.email } : undefined)
 
         // Clean up temp file after parsing
         try {
@@ -135,7 +135,7 @@ router.post('/enhance-summary', authGuard, rateLimit(20, 60 * 60 * 1000), async 
     try {
         const { resumeText, targetRole } = req.body
         if (!resumeText) return res.status(400).json({ error: 'resumeText is required' })
-        const summaries = await generateSummary(resumeText, targetRole)
+        const summaries = await generateSummary(resumeText, targetRole, { id: req.user!.id, email: req.user!.email }) 
         res.json({ summaries })
     } catch (err) {
         console.error('enhance-summary failed', err)
@@ -147,7 +147,7 @@ router.post('/enhance-experience', authGuard, rateLimit(30, 60 * 60 * 1000), asy
     try {
         const { bullets, role, company } = req.body
         if (!bullets || !Array.isArray(bullets)) return res.status(400).json({ error: 'bullets array required' })
-        const improved = await improveExperience(bullets, role || '', company || '')
+        const improved = await improveExperience(bullets, role || '', company || '') // improveExperience doesn't log yet, but good to have
         res.json({ improved })
     } catch (err) {
         console.error('enhance-experience failed', err)
@@ -159,7 +159,7 @@ router.post('/rewrite-bullets', authGuard, rateLimit(40, 60 * 60 * 1000), async 
     try {
         const { bullet, role, company } = req.body
         if (!bullet) return res.status(400).json({ error: 'bullet is required' })
-        const variants = await generateVariants('rewrite_bullet', { bullet, role, company })
+        const variants = await generateVariants('rewrite_bullet', { bullet, role, company }, { id: req.user!.id, email: req.user!.email })
         res.json({ variants })
     } catch (err) {
         console.error('rewrite-bullets failed', err)
@@ -215,7 +215,7 @@ router.post('/generateSummary', authGuard, rateLimit(10, 60 * 60 * 1000), async 
             return res.status(400).json({ error: 'resumeText is required' })
         }
 
-        const summaries = await generateSummary(resumeText, targetRole)
+        const summaries = await generateSummary(resumeText, targetRole, { id: req.user!.id, email: req.user!.email })
         res.json({ summaries })
     } catch (error) {
         console.error('Summary generation failed', error)
@@ -313,7 +313,8 @@ router.post(['/header-intelligence', '/header-intelligence/'], rateLimit(50, 60 
             return res.status(400).json({ error: 'type and value are required' });
         }
 
-        const result = await getHeaderIntelligence(type, value, context);
+        const user = (req as any).user ? { id: (req as any).user.id, email: (req as any).user.email } : undefined;
+        const result = await getHeaderIntelligence(type, value, context, user);
         res.json({ result });
     } catch (error: any) {
         console.error('❌ [AI] Header Intelligence Critical Failure:', error);
@@ -330,7 +331,8 @@ router.post('/topic-summary', rateLimit(20, 60 * 60 * 1000), async (req: any, re
     try {
         const { topic, context } = req.body;
         if (!topic) return res.status(400).json({ error: 'topic is required' });
-        const summary = await getTopicSummary(topic, context);
+        const user = (req as any).user ? { id: (req as any).user.id, email: (req as any).user.email } : undefined;
+        const summary = await getTopicSummary(topic, context, user);
         res.json({ summary });
     } catch (err: any) {
         console.error('topic-summary failed', err);

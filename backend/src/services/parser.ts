@@ -296,7 +296,7 @@ function normalizeToSchema(aiParsed: any, rawText: string) {
     };
 }
 
-export async function extractStructuredResume(text: string, meta?: any): Promise<{ parsed: any; confidence: number; rawText?: string; isFallback?: boolean }> {
+export async function extractStructuredResume(text: string, meta?: any, user?: { id?: string; email?: string }): Promise<{ parsed: any; confidence: number; rawText?: string; isFallback?: boolean }> {
     console.log('🔍 [DEBUG] RAW EXTRACTED TEXT START', '—'.repeat(20));
     console.log(text);
     console.log('🔍 [DEBUG] RAW EXTRACTED TEXT END', '—'.repeat(20));
@@ -354,7 +354,7 @@ export async function extractStructuredResume(text: string, meta?: any): Promise
             console.log("🕵️ [DETECTION] No watermark sequence (REF-X) detected.");
         }
 
-        const { data: parsedData, confidence } = await aiParseResumeText(text, originalScore, isExternal)
+        const { data: parsedData, confidence } = await aiParseResumeText(text, originalScore, isExternal, user)
         console.log('🤖 [V2-RESILIENT] RAW AI DATA Snippet:', JSON.stringify(parsedData).slice(0, 500));
 
         const normalized = normalizeToSchema(parsedData, text)
