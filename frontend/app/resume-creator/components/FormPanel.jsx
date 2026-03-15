@@ -3,6 +3,8 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import ResumyLogo from './Logo';
 import Link from "next/link";
 import Image from "next/image";
+import Cropper from 'react-easy-crop';
+import getCroppedImg from '../utils/cropImage';
 import {
     Plus, Trash2, Camera, User, Mail, Phone, MapPin,
     Globe, Linkedin, Github, ChevronDown, Check, Save,
@@ -35,8 +37,6 @@ import Projects from './Projects';
 import KeyAchievements from './KeyAchievements';
 import CustomSection from './CustomSection';
 import { motion, AnimatePresence } from "framer-motion";
-import Cropper from 'react-easy-crop';
-import getCroppedImg from '../utils/cropImage';
 import { useAnalytics } from "@/lib/analytics";
 import { CircleDoodle, UnderlineDoodle, SparkleDoodle, ScribbleDoodle, StarDoodle } from '@/components/landing-redesign/DoodleAnimations';
 import SuccessStep from './SuccessStep';
@@ -267,13 +267,10 @@ export default function FormPanel({ data, setData, templateId, onChangeTemplate,
     const [headerErrors, setHeaderErrors] = useState({});
     const [isExplorerLoading, setIsExplorerLoading] = useState(false);
     
-    // Photo Cropping State
     const [tempPhoto, setTempPhoto] = useState(null);
     const [isCropping, setIsCropping] = useState(false);
-    const [crop, setCrop] = useState({ x: 0, y: 0 });
-    const [zoom, setZoom] = useState(1);
-    const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
-    const [selectedShape, setSelectedShape] = useState('original');
+    const [pixelCrop, setPixelCrop] = useState(null);
+
 
     // Smart Intelligence State
     const [suggestedTitles, setSuggestedTitles] = useState([]);
@@ -1071,33 +1068,10 @@ export default function FormPanel({ data, setData, templateId, onChangeTemplate,
         }
     };
 
-    const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
-        setCroppedAreaPixels(croppedAreaPixels);
-    }, []);
-
-    const showCroppedImage = async () => {
-        try {
-            const croppedImage = await getCroppedImg(tempPhoto, croppedAreaPixels, 0, { horizontal: false, vertical: false }, selectedShape);
-            setData(prev => ({
-                ...prev,
-                personal: { 
-                    ...(prev.personal || {}), 
-                    photo: croppedImage,
-                    originalPhoto: tempPhoto, // Store original for "un-cropping"
-                    photoShape: selectedShape // Store shape for persistence
-                }
-            }));
-            setIsCropping(false);
-            setTempPhoto(null);
-        } catch (e) {
-            console.error(e);
-        }
-    };
 
     const handleUncrop = () => {
         if (data.personal?.originalPhoto) {
             setTempPhoto(data.personal.originalPhoto);
-            setSelectedShape(data.personal.photoShape || 'original');
             setIsCropping(true);
         }
     };
@@ -2710,138 +2684,167 @@ export default function FormPanel({ data, setData, templateId, onChangeTemplate,
                         }}
                     />
                 )}
-                {/* Premium Photo Cropping Modal */}
-                <AnimatePresence>
-                    {isCropping && (
-                        <motion.div 
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            style={{
-                                position: 'fixed',
-                                top: 0,
-                                left: 0,
-                                right: 0,
-                                bottom: 0,
-                                backgroundColor: 'rgba(0, 0, 0, 0.85)',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                zIndex: 9999,
-                                padding: isMobile ? '20px' : '40px',
-                                backdropFilter: 'blur(8px)'
+                                {isCropping && tempPhoto && (
+                    <div className="fixed inset-0 flex items-center justify-center p-4" style={{ zIndex: 100000 }}>
+                        {/* Backdrop */}
+                        <div 
+                            className="absolute inset-0 bg-stone-900/90 backdrop-blur-xl"
+                            onClick={() => {
+                                setIsCropping(false);
+                                setTempPhoto(null);
                             }}
-                        >
-                            <motion.div 
-                                initial={{ scale: 0.9, y: 20 }}
-                                animate={{ scale: 1, y: 0 }}
-                                className="bg-white rounded-[32px] overflow-hidden shadow-2xl flex flex-col"
-                                style={{
-                                    width: '100%',
-                                    maxWidth: '600px',
-                                    height: isMobile ? '80vh' : '700px',
-                                    position: 'relative'
-                                }}
-                            >
-                                <div className="p-6 border-b border-stone-100 flex items-center justify-between bg-stone-50/50">
+                        />
+                        
+                        {/* Nuclear Image Reset - Injected into Head */}
+                        <style dangerouslySetInnerHTML={{ __html: `
+                            .react-easy-crop_image {
+                                max-width: none !important;
+                                max-height: none !important;
+                                margin: 0 !important;
+                                padding: 0 !important;
+                                border: none !important;
+                                box-shadow: none !important;
+                                object-fit: none !important;
+                            }
+                        `}} />
+
+                        <div className="bg-white w-full max-w-2xl rounded-3xl overflow-hidden shadow-2xl relative z-10 flex flex-col h-[700px] max-h-[90vh]">
+                            {/* Header */}
+                            <div className="p-6 border-bottom border-stone-100 flex items-center justify-between bg-white">
+                                <div>
+                                    <h3 className="text-xl font-black text-stone-900 tracking-tighter">Premium Photo Editor</h3>
+                                    <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mt-0.5">Refine your professional appearance</p>
+                                </div>
+                                <button 
+                                    onClick={() => {
+                                        setIsCropping(false);
+                                        setTempPhoto(null);
+                                    }}
+                                    className="p-2 hover:bg-stone-100 rounded-full transition-colors"
+                                >
+                                    <X size={24} className="text-stone-400" />
+                                </button>
+                            </div>
+
+                            {/* Viewport - Explicit Fixed Height */}
+                            <div className="flex-1 relative bg-black overflow-hidden">
+                                <Cropper
+                                    image={tempPhoto}
+                                    crop={data.personal?.crop || { x: 0, y: 0 }}
+                                    zoom={data.personal?.zoom || 1}
+                                    aspect={1}
+                                    onCropChange={(c) => setData(prev => ({ 
+                                        ...prev, 
+                                        personal: { ...(prev.personal || {}), crop: c } 
+                                    }))}
+                                    onZoomChange={(z) => setData(prev => ({ 
+                                        ...prev, 
+                                        personal: { ...(prev.personal || {}), zoom: z } 
+                                    }))}
+                                    onCropComplete={(_, pc) => setPixelCrop(pc)}
+                                    cropShape={data.personal?.cropShape === 'circle' ? 'round' : 'rect'}
+                                    showGrid={false}
+                                />
+                            </div>
+
+                            {/* Controls */}
+                            <div className="p-8 bg-white border-top border-stone-100">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-end mb-8">
+                                    {/* Frame Shape Toggle */}
                                     <div>
-                                        <h3 className="text-xl font-black text-stone-900 tracking-tight">Premium Photo Editor</h3>
-                                        <p className="text-xs font-bold text-stone-400 uppercase tracking-widest mt-1">Refine your professional appearance</p>
-                                    </div>
-                                    <button 
-                                        onClick={() => { setIsCropping(false); setTempPhoto(null); }}
-                                        className="p-2 hover:bg-stone-100 rounded-full transition-colors"
-                                    >
-                                        <X size={20} />
-                                    </button>
-                                </div>
-
-                                <div className="flex-1 relative bg-stone-900">
-                                    <Cropper
-                                        image={tempPhoto}
-                                        crop={crop}
-                                        zoom={zoom}
-                                        aspect={1} // Square crop for profile photos
-                                        onCropChange={setCrop}
-                                        onCropComplete={onCropComplete}
-                                        onZoomChange={setZoom}
-                                        cropShape={selectedShape === 'circle' ? 'round' : 'rect'}
-                                        showGrid={false}
-                                        restrictPosition={false}
-                                    />
-                                </div>
-
-                                <div className="p-8 bg-white space-y-8">
-                                    <div className="space-y-4">
-                                        <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest block mb-3">Frame Style</span>
-                                        <div className="flex gap-3 overflow-x-auto pb-2 custom-scrollbar">
-                                            {[
-                                                { id: 'original', label: 'Square', icon: Square },
-                                                { id: 'circle', label: 'Circle', icon: Circle },
-                                                { id: 'rounded', label: 'Rounded', icon: Layout },
-                                                { id: 'hexagon', label: 'Hexagon', icon: Hexagon },
-                                                { id: 'diamond', label: 'Diamond', icon: Diamond }
-                                            ].map(s => (
-                                                <button
-                                                    key={s.id}
-                                                    onClick={() => setSelectedShape(s.id)}
-                                                    className={`px-4 py-2.5 rounded-xl border-2 transition-all flex items-center gap-2 flex-shrink-0 ${
-                                                        selectedShape === s.id 
-                                                        ? 'border-violet-600 bg-violet-50 text-violet-700 shadow-sm' 
-                                                        : 'border-stone-100 bg-white text-stone-500 hover:border-stone-200'
-                                                    }`}
-                                                >
-                                                    <s.icon size={14} fill={selectedShape === s.id ? 'currentColor' : 'none'} fillOpacity={selectedShape === s.id ? 0.1 : 0} />
-                                                    <span className="text-[11px] font-bold">{s.label}</span>
-                                                </button>
-                                            ))}
+                                        <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-3 block">Frame Style</label>
+                                        <div className="flex bg-stone-50 p-1 rounded-xl border border-stone-100">
+                                            <button
+                                                onClick={() => setData(prev => ({ 
+                                                    ...prev, 
+                                                    personal: { ...(prev.personal || {}), cropShape: 'square' } 
+                                                }))}
+                                                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-all ${(!data.personal?.cropShape || data.personal?.cropShape === 'square') ? 'bg-white text-blue-600 shadow-sm' : 'text-stone-400'}`}
+                                            >
+                                                <Square size={14} /> Square
+                                            </button>
+                                            <button
+                                                onClick={() => setData(prev => ({ 
+                                                    ...prev, 
+                                                    personal: { ...(prev.personal || {}), cropShape: 'circle' } 
+                                                }))}
+                                                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-all ${(data.personal?.cropShape === 'circle') ? 'bg-white text-blue-600 shadow-sm' : 'text-stone-400'}`}
+                                            >
+                                                <Circle size={14} /> Circle
+                                            </button>
                                         </div>
                                     </div>
 
-                                    <div className="space-y-4">
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest flex items-center gap-2">
-                                                <Maximize2 size={12} /> Zoom Level
+                                    {/* Zoom Control */}
+                                    <div>
+                                        <div className="flex items-center justify-between mb-2">
+                                            <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest">Zoom Level</label>
+                                            <span className="text-xs font-black text-blue-600">
+                                                {Math.round((data.personal?.zoom || 1) * 100)}%
                                             </span>
-                                            <span className="text-sm font-bold text-violet-600 bg-violet-50 px-2 py-0.5 rounded-full">{Math.round(zoom * 100)}%</span>
                                         </div>
-                                        <input
+                                        <input 
                                             type="range"
-                                            value={zoom}
                                             min={1}
                                             max={3}
-                                            step={0.1}
-                                            aria-labelledby="Zoom"
-                                            onChange={(e) => setZoom(parseFloat(e.target.value))}
-                                            className="w-full h-2 bg-stone-100 rounded-lg appearance-none cursor-pointer accent-violet-600"
+                                            step={0.01}
+                                            value={data.personal?.zoom || 1}
+                                            onChange={(e) => setData(prev => ({ 
+                                                ...prev, 
+                                                personal: { ...(prev.personal || {}), zoom: parseFloat(e.target.value) } 
+                                            }))}
+                                            className="w-full h-1.5 bg-stone-100 rounded-lg appearance-none cursor-pointer accent-blue-600"
                                         />
                                     </div>
-
-                                    <div className="flex gap-4">
-                                        <button
-                                            onClick={() => { setIsCropping(false); setTempPhoto(null); }}
-                                            className="flex-1 px-6 py-4 rounded-2xl border-2 border-stone-100 text-stone-600 font-bold hover:bg-stone-50 transition-all active:scale-95"
-                                        >
-                                            Cancel
-                                        </button>
-                                        <button
-                                            onClick={showCroppedImage}
-                                            className="flex-[2] px-6 py-4 rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-700 text-white font-bold shadow-xl shadow-violet-200 hover:shadow-violet-300 transition-all hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-3"
-                                        >
-                                            <Sparkles size={18} fill="currentColor" /> Save Changes
-                                        </button>
-                                    </div>
-                                    
-                                    <p className="text-center text-[10px] font-bold text-stone-400 uppercase tracking-widest">
-                                        <ShieldCheck size={10} className="inline mr-1 text-emerald-500" /> AI-Enhanced Processing Active
-                                    </p>
                                 </div>
-                            </motion.div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+
+                                <div className="flex gap-4">
+                                    <button 
+                                        onClick={() => {
+                                            setIsCropping(false);
+                                            setTempPhoto(null);
+                                        }}
+                                        className="flex-1 py-4 text-stone-500 font-bold text-sm bg-stone-50 hover:bg-stone-100 rounded-2xl transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button 
+                                        onClick={async () => {
+                                            if (!pixelCrop) return;
+                                            try {
+                                                const cropped = await getCroppedImg(
+                                                    tempPhoto,
+                                                    pixelCrop,
+                                                    0,
+                                                    { horizontal: false, vertical: false },
+                                                    data.personal?.cropShape || 'square'
+                                                );
+                                                setData(prev => ({ 
+                                                    ...prev, 
+                                                    personal: { 
+                                                        ...(prev.personal || {}), 
+                                                        photo: cropped,
+                                                        originalPhoto: tempPhoto
+                                                    } 
+                                                }));
+                                                setIsCropping(false);
+                                                setTempPhoto(null);
+                                            } catch (e) { console.error(e); }
+                                        }}
+                                        className="flex-[1.5] py-4 bg-stone-900 text-white font-black text-sm rounded-2xl shadow-xl hover:bg-black transition-all flex items-center justify-center gap-2"
+                                    >
+                                        <Sparkles size={18} fill="currentColor" />
+                                        Save Changes
+                                    </button>
+                                </div>
+                                <div className="flex items-center justify-center gap-1.5 mt-6 text-[9px] font-black text-stone-300 uppercase tracking-widest">
+                                    <ShieldCheck size={12} className="text-emerald-400" /> AI-Optimized Image Processing
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
-}
+};

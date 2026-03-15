@@ -46,12 +46,12 @@ export default async function getCroppedImg(
   const canvas = document.createElement('canvas')
   const ctx = canvas.getContext('2d')
 
-  if (!ctx) {
-    return null
-  }
+  if (!ctx) return null
 
   const rotRad = getRadianAngle(rotation)
 
+  // Step 1: Normalize the image (rotation/flip) onto a temporary canvas
+  // We use the bounding box to ensure the entire rotated image fits
   const { width: bBoxWidth, height: bBoxHeight } = rotateSize(
     image.width,
     image.height,
@@ -61,67 +61,46 @@ export default async function getCroppedImg(
   canvas.width = bBoxWidth
   canvas.height = bBoxHeight
 
+  // Transform around the center of the bounding box
   ctx.translate(bBoxWidth / 2, bBoxHeight / 2)
   ctx.rotate(rotRad)
   ctx.scale(flip.horizontal ? -1 : 1, flip.vertical ? -1 : 1)
   ctx.translate(-image.width / 2, -image.height / 2)
 
+  ctx.imageSmoothingEnabled = true
+  ctx.imageSmoothingQuality = 'high'
   ctx.drawImage(image, 0, 0)
 
-  const resultCanvas = document.createElement('canvas')
-  const resultCtx = resultCanvas.getContext('2d')
+  // Step 2: Extract the crop from the normalized canvas
+  const croppedCanvas = document.createElement('canvas')
+  const croppedCtx = croppedCanvas.getContext('2d')
 
-  resultCanvas.width = pixelCrop.width
-  resultCanvas.height = pixelCrop.height
+  if (!croppedCtx) return null
 
-  // If shape is original, use white background and JPEG (faster/smaller)
-  // Otherwise use PNG for transparency
-  const isShaped = shape !== 'original';
-  
+  croppedCanvas.width = pixelCrop.width
+  croppedCanvas.height = pixelCrop.height
+
+  croppedCtx.imageSmoothingEnabled = true
+  croppedCtx.imageSmoothingQuality = 'high'
+
+  // Fill white for square crops (avoiding black edges if zoom < 1)
+  const isShaped = shape !== 'original' && shape !== 'square'
   if (!isShaped) {
-    resultCtx.fillStyle = 'white'
-    resultCtx.fillRect(0, 0, resultCanvas.width, resultCanvas.height)
+    croppedCtx.fillStyle = 'white'
+    croppedCtx.fillRect(0, 0, pixelCrop.width, pixelCrop.height)
   }
 
-  // Apply Clipping Path based on shape
-  if (isShaped) {
-    resultCtx.beginPath();
-    const w = resultCanvas.width;
-    const h = resultCanvas.height;
-
-    if (shape === 'circle') {
-      resultCtx.arc(w / 2, h / 2, Math.min(w, h) / 2, 0, 2 * Math.PI);
-    } else if (shape === 'rounded') {
-      const r = Math.min(w, h) * 0.2; // 20% border radius
-      resultCtx.moveTo(r, 0);
-      resultCtx.lineTo(w - r, 0);
-      resultCtx.quadraticCurveTo(w, 0, w, r);
-      resultCtx.lineTo(w, h - r);
-      resultCtx.quadraticCurveTo(w, h, w - r, h);
-      resultCtx.lineTo(r, h);
-      resultCtx.quadraticCurveTo(0, h, 0, h - r);
-      resultCtx.lineTo(0, r);
-      resultCtx.quadraticCurveTo(0, 0, r, 0);
-    } else if (shape === 'hexagon') {
-      const s = Math.min(w, h);
-      resultCtx.moveTo(s / 2, 0);
-      resultCtx.lineTo(s, s / 4);
-      resultCtx.lineTo(s, 3 * s / 4);
-      resultCtx.lineTo(s / 2, s);
-      resultCtx.lineTo(0, 3 * s / 4);
-      resultCtx.lineTo(0, s / 4);
-      resultCtx.closePath();
-    } else if (shape === 'diamond') {
-      resultCtx.moveTo(w / 2, 0);
-      resultCtx.lineTo(w, h / 2);
-      resultCtx.lineTo(w / 2, h);
-      resultCtx.lineTo(0, h / 2);
-      resultCtx.closePath();
-    }
-    resultCtx.clip();
+  // Apply shape mask if needed
+  if (isShaped && shape === 'circle') {
+    const w = pixelCrop.width
+    const h = pixelCrop.height
+    croppedCtx.beginPath()
+    croppedCtx.arc(w / 2, h / 2, Math.min(w, h) / 2, 0, 2 * Math.PI)
+    croppedCtx.clip()
   }
 
-  resultCtx.drawImage(
+  // Draw the desired area from the normalized canvas to the final canvas
+  croppedCtx.drawImage(
     canvas,
     pixelCrop.x,
     pixelCrop.y,
@@ -133,5 +112,5 @@ export default async function getCroppedImg(
     pixelCrop.height
   )
 
-  return resultCanvas.toDataURL(isShaped ? 'image/png' : 'image/jpeg');
+  return croppedCanvas.toDataURL(isShaped ? 'image/png' : 'image/jpeg')
 }
