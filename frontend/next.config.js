@@ -35,13 +35,24 @@ const nextConfig = {
       },
     ];
   },
-  webpack: (config) => {
-    // Completely ignore onnxruntime-node in both browser and server bundles.
-    // This stops Next.js from trying to parse the faulty .mjs file during build.
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      'onnxruntime-node': false,
-    };
+  webpack: (config, { webpack, isServer }) => {
+    // Aggressively ignore onnxruntime-node to prevent the build from parsing faulty .mjs files
+    config.plugins.push(
+      new webpack.IgnorePlugin({
+        resourceRegExp: /^onnxruntime-node$/,
+      })
+    );
+
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        path: false,
+        crypto: false,
+        module: false,
+        perf_hooks: false,
+      };
+    }
     return config;
   },
 }
