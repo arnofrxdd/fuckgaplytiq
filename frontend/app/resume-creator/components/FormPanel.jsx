@@ -868,10 +868,11 @@ export default function FormPanel({ data, setData, templateId, onChangeTemplate,
     });
 
     // Finalize is always the LAST logical step
-    const finalizeStepId = 7 + activeExtraSteps.length + 1;
-    const successStepId = 7 + activeExtraSteps.length; // Keep internal for legacy, but we'll skip it
+    // NOTE: SuccessStep is DISABLED — successStepId === finalizeStepId so navigation skips it entirely
+    const finalizeStepId = 7 + activeExtraSteps.length;
+    const successStepId = finalizeStepId; // DISABLED: points directly to Finalize
 
-    allSteps.push({ id: successStepId, label: "Success", component: SuccessStep });
+    // SuccessStep intentionally NOT pushed to allSteps (disabled but not deleted)
     allSteps.push({ id: finalizeStepId, label: "Finalize", icon: Check });
 
     // FIXED SIDEBAR (Exactly 7 Steps)
@@ -1027,11 +1028,12 @@ export default function FormPanel({ data, setData, templateId, onChangeTemplate,
             console.log(`[FormPanel] Step ${step} is out of bounds after section removal. Snapping to Finalize (${finalizeStepId}).`);
             setStep(finalizeStepId);
         }
-
         // Sync TO URL (Push state)
         if (onSyncUrl && isLoadedFromDB && !isSwitching) {
             const isFinalize = step === finalizeStepId;
-            onSyncUrl(isFinalize ? 'finalize' : 'editor', null, resumeId || builder_resume_id, isFinalize ? null : step);
+            // User requested to keep extra sections (step > 6) as step=6 in URL
+            const urlStepValue = (step > 6 && step < finalizeStepId) ? 6 : step;
+            onSyncUrl(isFinalize ? 'finalize' : 'editor', null, resumeId || builder_resume_id, isFinalize ? null : urlStepValue);
         }
     }, [finalizeStepId, step, resumeId, isLoadedFromDB, isSwitching]);
 ;
@@ -1264,9 +1266,10 @@ export default function FormPanel({ data, setData, templateId, onChangeTemplate,
 
 
     const activeStepObj = allSteps.find(s => s.id === step) ||
-        (step >= successStepId ? allSteps.find(s => s.label === "Finalize") : allSteps[0]);
+        (step >= finalizeStepId ? allSteps.find(s => s.label === "Finalize") : allSteps[0]);
 
-    const isFullScreenStep = activeStepObj?.label === "Success" || activeStepObj?.label === "Finalize";
+    // SuccessStep is disabled — only Finalize triggers full-screen layout
+    const isFullScreenStep = activeStepObj?.label === "Finalize";
     const showSidebar = !isFullScreenStep;
 
     // --- SMART INTELLIGENCE HANDLERS ---
@@ -1576,15 +1579,13 @@ export default function FormPanel({ data, setData, templateId, onChangeTemplate,
         // ID-Shift Safety: Find the step object. Fallback to "Finalize" if we are in the high-step range
         // but the exact ID is missing (common during section removal).
         const currentStepObj = allSteps.find(s => s.id === step) ||
-            (step >= successStepId ? allSteps.find(s => s.label === "Finalize") : null);
+            (step >= finalizeStepId ? allSteps.find(s => s.label === "Finalize") : null);
 
         if (!currentStepObj) return null;
 
-        // 1. DYNAMIC STEP HANDLING (Success & Finalize)
-        // We handle these by label to ensure they don't unmount when 'step' index shifts
-        if (currentStepObj.label === "Success") {
-            return <SuccessStep data={data} templateId={safeTemplateId} onBack={prevStep} onNext={nextStep} />;
-        }
+        // 1. DYNAMIC STEP HANDLING (Finalize)
+        // SuccessStep is disabled — "Success" label will never be reached
+        // if (currentStepObj.label === "Success") { /* DISABLED */ }
 
         if (currentStepObj.label === "Finalize") {
             return (
@@ -1857,7 +1858,7 @@ export default function FormPanel({ data, setData, templateId, onChangeTemplate,
                                 {/* Left: Core Contact */}
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                        <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#f0fdf4', color: '#10b981', display: 'flex', alignItems: 'center', justifySelf: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#f0fdf4', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                             <Mail size={16} />
                                         </div>
                                         <h4 style={{ fontSize: '14px', fontWeight: 800, color: 'var(--gap-text-main)', margin: 0, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Communication</h4>
@@ -2209,7 +2210,7 @@ export default function FormPanel({ data, setData, templateId, onChangeTemplate,
                     const Component = currentStepObj.component;
                     return <Component data={data} setData={setData} templateId={safeTemplateId} onBack={prevStep} onNext={nextStep} onPreview={() => setPreviewOpen(true)} isQuickEdit={isQuickEdit} onReturnToDashboard={handleReturnToDashboard} isFieldSupported={() => true} currentTemplateName={currentTemplate?.name} isMobile={isMobile} />;
                 }
-                if (step === successStepId) return <SuccessStep data={data} templateId={safeTemplateId} onBack={prevStep} onNext={nextStep} />;
+                // SuccessStep DISABLED: successStepId === finalizeStepId, so this branch is never hit
                 if (step === finalizeStepId) return (
                     <Finalize
                         data={data}
@@ -2914,7 +2915,10 @@ export default function FormPanel({ data, setData, templateId, onChangeTemplate,
                     onClose={() => setIsDraftExplorerOpen(false)}
                     drafts={drafts}
                     currentResumeId={resumeId}
-                    onSelectDraft={(draft) => onSwitchProject(draft)}
+                    onSelectDraft={(draft) => {
+                        onSwitchProject(draft);
+                        setIsDraftExplorerOpen(false);
+                    }}
                     onRenameDraft={handleRenameDraft}
                     onDeleteDraft={handleDeleteDraft}
                     onStartNew={() => window.location.href = '/resumy/resume-creator'}
