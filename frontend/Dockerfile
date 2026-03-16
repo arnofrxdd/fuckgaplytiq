@@ -12,6 +12,9 @@ RUN npm install
 # Copy the rest of the application
 COPY frontend .
 
+# Copy @imgly/background-removal assets to public so they are served as static assets
+RUN mkdir -p public/models && cp -R node_modules/@imgly/background-removal/dist/* public/models/
+
 # Build the application
 # We need environment variables for the build if they are NEXT_PUBLIC
 ARG NEXT_PUBLIC_API_URL

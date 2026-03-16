@@ -1483,10 +1483,10 @@ export default function FormPanel({ data, setData, templateId, onChangeTemplate,
             const res = await fetch(photoSrc);
             const inputBlob = await res.blob();
             
-            // Configuration with explicit public path for models
+            // Configuration pointing to our newly copied static assets in 'public/models'
             const config = {
                 output: { format: 'image/png', quality: 0.9 },
-                publicPath: `${window.location.origin}/resumy/node_modules/@imgly/background-removal/dist/`
+                publicPath: `${window.location.origin}/resumy/models/`
             };
 
             const resultBlob = await removeBackground(inputBlob, config);
