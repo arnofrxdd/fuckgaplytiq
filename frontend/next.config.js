@@ -35,13 +35,19 @@ const nextConfig = {
       },
     ];
   },
-  webpack: (config, { webpack, isServer }) => {
-    // Aggressively ignore onnxruntime-node to prevent the build from parsing faulty .mjs files
-    config.plugins.push(
-      new webpack.IgnorePlugin({
-        resourceRegExp: /^onnxruntime-node$/,
-      })
-    );
+  transpilePackages: ['@imgly/background-removal'],
+  webpack: (config, { isServer }) => {
+    // 1. Tell webpack NOT to parse the faulty node-specific ONNX file
+    config.module.noParse = [
+      ...(config.module.noParse || []),
+      /ort\.node\.min\.mjs$/,
+    ];
+
+    // 2. Alias it to false so it's not even attempted to be loaded
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      'onnxruntime-node': false,
+    };
 
     if (!isServer) {
       config.resolve.fallback = {
