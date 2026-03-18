@@ -1,0 +1,1765 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gaplytiq — AI Resume Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root {
+  --bg:#f4f3ef;--bg2:#eceae4;--bg3:#e2e0d8;
+  --surface:#ffffff;--surface2:#f8f7f4;
+  --border:#d6d4cc;--border2:#c4c1b8;
+  --text:#18170f;--text2:#56544a;--text3:#8a8778;
+  --accent:#3d5a80;--accent-light:#eef2f7;--accent-glow:rgba(61,90,128,0.14);
+  --btn:#1e2d40;--btn-h:#111c28;
+  --green:#2d7a4f;--green-bg:#edf7f2;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 16px rgba(0,0,0,.09),0 2px 4px rgba(0,0,0,.04);
+  --shadow-lg:0 16px 48px rgba(0,0,0,.12),0 4px 8px rgba(0,0,0,.06);
+  --r:6px;--r-lg:10px;--r-xl:16px;
+  --ease:200ms cubic-bezier(.4,0,.2,1);
+}
+[data-theme="dark"]{
+  --bg:#0e0e0c;--bg2:#131311;--bg3:#1a1a17;
+  --surface:#1c1c19;--surface2:#222220;
+  --border:#2c2c28;--border2:#3a3a35;
+  --text:#efece3;--text2:#9e9b90;--text3:#68665c;
+  --accent:#7fa3c8;--accent-light:#1a2535;--accent-glow:rgba(127,163,200,.12);
+  --btn:#7fa3c8;--btn-h:#a0bfd8;
+  --green:#4ade80;--green-bg:#052e16;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.35);
+  --shadow-md:0 4px 16px rgba(0,0,0,.4);
+  --shadow-lg:0 16px 48px rgba(0,0,0,.5);
+}
+
+html,body{height:100%;font-family:'Instrument Sans',sans-serif;background:var(--bg);color:var(--text);overflow:hidden}
+.screen{display:none;width:100%;height:100vh;animation:fadeUp 260ms ease both;flex-direction:column}
+.screen.active{display:flex}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ─ TYPOGRAPHY ─ */
+.mono{font-family:'DM Mono',monospace}
+.serif{font-family:'DM Serif Display',serif}
+.label-caps{font-size:10.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--text3)}
+
+/* ─ BUTTONS ─ */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:var(--r);border:none;cursor:pointer;font-family:'Instrument Sans',sans-serif;font-size:13.5px;font-weight:500;transition:var(--ease);position:relative;overflow:hidden;white-space:nowrap}
+.btn-primary{background:var(--btn);color:#fff;box-shadow:var(--shadow-sm)}
+.btn-primary:hover{background:var(--btn-h);transform:translateY(-1px);box-shadow:var(--shadow-md)}
+.btn-secondary{background:var(--surface);color:var(--text);border:1px solid var(--border);box-shadow:var(--shadow-sm)}
+.btn-secondary:hover{background:var(--bg2);transform:translateY(-1px);box-shadow:var(--shadow-md)}
+.btn-ghost{background:transparent;color:var(--text2);padding:8px 12px}
+.btn-ghost:hover{background:var(--bg2);color:var(--text)}
+.btn-sm{padding:6px 12px;font-size:12.5px}
+.btn-xs{padding:4px 9px;font-size:11.5px}
+
+/* ─ INPUTS ─ */
+.input{width:100%;padding:9px 13px;border-radius:var(--r);border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:'Instrument Sans',sans-serif;font-size:13.5px;transition:var(--ease);outline:none}
+.input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+.input::placeholder{color:var(--text3)}
+textarea.input{resize:none;line-height:1.65}
+
+/* ─ THEME TOGGLE ─ */
+.tt{width:34px;height:34px;border-radius:var(--r);border:1px solid var(--border);background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:var(--ease);color:var(--text2);flex-shrink:0}
+.tt:hover{background:var(--bg2)}
+
+/* ─ TOAST ─ */
+#toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--text);color:var(--bg);padding:9px 18px;border-radius:20px;font-size:12.5px;font-weight:500;opacity:0;transition:all 250ms ease;z-index:9999;pointer-events:none;white-space:nowrap}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ─ SHIMMER ─ */
+.shimmer{background:linear-gradient(90deg,var(--bg2) 25%,var(--bg3) 50%,var(--bg2) 75%);background-size:200% 100%;animation:shim 1.3s infinite;border-radius:4px}
+@keyframes shim{from{background-position:200% 0}to{background-position:-200% 0}}
+
+/* ─ SCROLLBAR ─ */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+/* ════════════════════════════════════════
+   AGENT BAR (GLOBAL PERSISTENT)
+════════════════════════════════════════ */
+#agentBar{
+  position:fixed;bottom:0;left:0;right:0;z-index:1000;
+  background:var(--surface);border-top:1px solid var(--border);
+  box-shadow:0 -8px 32px rgba(0,0,0,.08);
+  transition:var(--ease);
+}
+.agent-inner{
+  max-width:100%;padding:10px 20px;display:flex;align-items:center;gap:12px;
+}
+.agent-avatar{
+  width:36px;height:36px;border-radius:50%;background:var(--btn);
+  display:flex;align-items:center;justify-content:center;font-size:16px;
+  flex-shrink:0;position:relative;
+}
+.agent-avatar::after{
+  content:'';position:absolute;inset:-3px;border-radius:50%;
+  border:2px solid var(--accent);
+  animation:agentPulse 2.5s ease-in-out infinite;
+}
+@keyframes agentPulse{0%,100%{opacity:.5;transform:scale(1)}50%{opacity:.15;transform:scale(1.1)}}
+.agent-bubble{
+  flex:1;display:flex;align-items:center;gap:10px;
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--r-lg);padding:10px 14px;
+  cursor:text;transition:var(--ease);min-height:44px;
+}
+.agent-bubble:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow);background:var(--surface)}
+.agent-text-wrap{flex:1;display:flex;align-items:center;gap:0}
+.agent-hint{color:var(--text3);font-size:13.5px;pointer-events:none;flex-shrink:0}
+.agent-input{
+  flex:1;border:none;background:transparent;color:var(--text);
+  font-family:'Instrument Sans',sans-serif;font-size:13.5px;outline:none;
+  caret-color:var(--accent);
+}
+.agent-input::placeholder{color:var(--text3)}
+.agent-msg{
+  font-size:13.5px;color:var(--text2);line-height:1.5;
+  display:flex;align-items:center;gap:8px;flex:1;
+}
+.agent-msg strong{color:var(--text);font-weight:500}
+.agent-dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.agent-actions{display:flex;gap:6px;flex-shrink:0}
+.agent-chip{
+  padding:5px 11px;border-radius:20px;font-size:12px;font-weight:500;
+  border:1px solid var(--border);background:var(--surface);color:var(--text2);
+  cursor:pointer;transition:var(--ease);white-space:nowrap;
+}
+.agent-chip:hover{background:var(--accent-light);border-color:var(--accent);color:var(--accent)}
+.agent-chip.primary-chip{background:var(--btn);color:#fff;border-color:var(--btn)}
+.agent-chip.primary-chip:hover{background:var(--btn-h)}
+.agent-name{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);flex-shrink:0}
+
+/* ════════════════════════════════════════
+   1. LANDING
+════════════════════════════════════════ */
+#landing{align-items:center;justify-content:center;position:relative;overflow:hidden}
+.land-grid{position:absolute;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:52px 52px;opacity:.35;mask-image:radial-gradient(ellipse 90% 80% at 50% 40%,black 10%,transparent 75%)}
+.land-nav{position:absolute;top:0;left:0;right:0;padding:18px 36px;display:flex;align-items:center;justify-content:space-between}
+.logo{font-family:'DM Serif Display',serif;font-size:19px;letter-spacing:-.02em}
+.logo span{color:var(--text3)}
+.land-hero{text-align:center;z-index:1;max-width:580px;padding:0 24px}
+.land-pill{display:inline-flex;align-items:center;gap:7px;padding:5px 13px;border-radius:20px;border:1px solid var(--border);background:var(--surface);font-size:11.5px;color:var(--text3);margin-bottom:26px;font-weight:500}
+.land-pill::before{content:'●';color:#4ade80;font-size:8px;animation:pulse 2s infinite}
+.land-h1{font-family:'DM Serif Display',serif;font-size:clamp(46px,7.5vw,78px);line-height:1.02;letter-spacing:-.03em;margin-bottom:18px}
+.land-h1 em{font-style:italic;color:var(--text3)}
+.land-sub{font-size:16.5px;color:var(--text2);line-height:1.65;margin-bottom:34px}
+.land-cta-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.land-cta{padding:12px 26px;font-size:14.5px}
+.land-foot{position:absolute;bottom:28px;font-size:11.5px;color:var(--text3);letter-spacing:.05em}
+
+/* ════════════════════════════════════════
+   2. DASHBOARD
+════════════════════════════════════════ */
+#dashboard{overflow:hidden}
+.dash-topbar{
+  height:60px;border-bottom:1px solid var(--border);background:var(--surface);
+  display:flex;align-items:center;padding:0 20px;gap:14px;flex-shrink:0;
+  position:relative;z-index:100;
+}
+.dash-logo{font-family:'DM Serif Display',serif;font-size:18px;letter-spacing:-.02em;margin-right:4px}
+.divider{width:1px;height:20px;background:var(--border)}
+
+/* THE MAIN AGENT SEARCH BAR in topbar */
+.dash-search-wrap{flex:1;position:relative;max-width:none}
+.dash-search{
+  width:100%;padding:10px 16px 10px 42px;border-radius:var(--r-lg);
+  border:1px solid var(--border);background:var(--bg2);
+  color:var(--text);font-size:14px;font-family:'Instrument Sans',sans-serif;
+  transition:var(--ease);outline:none;
+}
+.dash-search:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow);background:var(--surface)}
+.dash-search::placeholder{color:var(--text3)}
+.dash-search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:17px;color:var(--text3);pointer-events:none}
+.search-badge{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:2px 7px;font-family:'DM Mono',monospace;font-size:10.5px;color:var(--text3)}
+.search-drop{
+  position:absolute;top:calc(100% + 8px);left:0;right:0;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);
+  box-shadow:var(--shadow-lg);overflow:hidden;z-index:500;
+  animation:dropIn 140ms ease both;
+}
+.search-drop.hidden{display:none}
+@keyframes dropIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
+.sd-section{padding:8px 0}
+.sd-section-label{padding:6px 16px 4px;font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text3)}
+.sd-item{display:flex;align-items:center;gap:11px;padding:9px 16px;cursor:pointer;font-size:13.5px;color:var(--text2);transition:var(--ease)}
+.sd-item:hover{background:var(--bg2);color:var(--text)}
+.sd-item .si{font-size:17px;width:26px;text-align:center;flex-shrink:0}
+.sd-item-sub{font-size:11.5px;color:var(--text3);margin-top:1px}
+.sd-sep{height:1px;background:var(--border);margin:4px 0}
+
+.dash-tr{margin-left:auto;display:flex;align-items:center;gap:8px}
+.avatar{width:32px;height:32px;border-radius:50%;background:var(--btn);display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:600;color:#fff;flex-shrink:0}
+
+.dash-body{display:flex;flex:1;overflow:hidden}
+.sidebar{width:52px;border-right:1px solid var(--border);background:var(--surface);padding:14px 8px;display:flex;flex-direction:column;gap:4px;flex-shrink:0}
+.sb-item{width:36px;height:36px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:17px;position:relative;transition:var(--ease);color:var(--text3)}
+.sb-item:hover{background:var(--bg2);color:var(--text)}
+.sb-item.active{background:var(--accent-light);color:var(--accent)}
+.sb-tip{position:absolute;left:calc(100% + 10px);background:var(--text);color:var(--bg);padding:4px 8px;border-radius:4px;font-size:11px;font-weight:500;white-space:nowrap;pointer-events:none;opacity:0;transition:var(--ease)}
+.sb-item:hover .sb-tip{opacity:1}
+
+.dash-main{flex:1;overflow-y:auto;padding:28px 32px;padding-bottom:90px}
+.dash-greeting{margin-bottom:26px}
+.dash-greeting .g-label{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:3px}
+.dash-greeting h2{font-family:'DM Serif Display',serif;font-size:26px;letter-spacing:-.025em}
+
+.qa-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:30px}
+.qa-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:18px;cursor:pointer;transition:var(--ease);position:relative;overflow:hidden}
+.qa-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:var(--border2)}
+.qa-card.feat{background:var(--btn);border-color:var(--btn);color:#fff}
+.qa-card.feat .qc-title,.qa-card.feat .qc-sub{color:#fff}
+.qa-card.feat .qc-sub{color:rgba(255,255,255,.6)}
+.qa-card.dim{opacity:.52;cursor:default}
+.qa-card.dim:hover{transform:none;box-shadow:none}
+.qc-icon{font-size:20px;margin-bottom:10px}
+.qc-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:3px}
+.qc-sub{font-size:11.5px;color:var(--text3);line-height:1.5}
+.soon-tag{position:absolute;top:10px;right:10px;background:var(--bg3);border:1px solid var(--border);color:var(--text3);font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:10px;letter-spacing:.05em;text-transform:uppercase}
+
+.rl-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.rl-items{display:flex;flex-direction:column;gap:7px}
+.rl-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:13px 16px;display:flex;align-items:center;gap:13px;cursor:pointer;transition:var(--ease)}
+.rl-item:hover{box-shadow:var(--shadow-sm);transform:translateY(-1px);border-color:var(--border2)}
+.rl-item:hover .rli-open{opacity:1}
+.rli-icon{font-size:18px}
+.rli-info{flex:1}
+.rli-name{font-size:13.5px;font-weight:500}
+.rli-meta{font-size:11.5px;color:var(--text3);margin-top:2px}
+.rli-open{opacity:0;transition:var(--ease);font-size:11.5px;color:var(--accent);font-weight:500;background:var(--accent-light);padding:4px 9px;border-radius:4px}
+.rli-status{font-size:10.5px;font-weight:600;padding:3px 8px;border-radius:4px;letter-spacing:.04em;text-transform:uppercase}
+.s-complete{background:var(--green-bg);color:var(--green)}
+.s-draft{background:var(--bg2);color:var(--text3)}
+
+/* ════════════════════════════════════════
+   MODAL OVERLAY
+════════════════════════════════════════ */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:800;display:flex;align-items:center;justify-content:center;animation:fadeIn 200ms ease;backdrop-filter:blur(4px)}
+.modal-overlay.hidden{display:none}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--shadow-lg);width:560px;max-width:94vw;animation:modalUp 240ms cubic-bezier(.34,1.4,.64,1) both}
+@keyframes modalUp{from{opacity:0;transform:scale(.95) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.modal-head{padding:24px 28px 18px;border-bottom:1px solid var(--border)}
+.modal-title{font-family:'DM Serif Display',serif;font-size:22px;letter-spacing:-.02em;margin-bottom:4px}
+.modal-sub{font-size:13px;color:var(--text3)}
+.modal-body{padding:22px 28px}
+.modal-foot{padding:16px 28px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px}
+
+/* Start Mode Cards */
+.mode-cards{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:4px}
+.mode-card{border:2px solid var(--border);border-radius:var(--r-lg);padding:16px 14px;cursor:pointer;transition:var(--ease);text-align:center;background:var(--surface)}
+.mode-card:hover{border-color:var(--accent);background:var(--accent-light)}
+.mode-card.selected{border-color:var(--accent);background:var(--accent-light)}
+.mc-icon{font-size:26px;margin-bottom:8px}
+.mc-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px}
+.mc-sub{font-size:11px;color:var(--text3);line-height:1.5}
+
+/* Template Cards */
+.template-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tpl-card{border:2px solid var(--border);border-radius:var(--r-lg);padding:16px;cursor:pointer;transition:var(--ease);position:relative;background:var(--surface)}
+.tpl-card:hover{border-color:var(--accent);transform:translateY(-1px);box-shadow:var(--shadow-md)}
+.tpl-card.selected{border-color:var(--accent);background:var(--accent-light)}
+.tpl-preview{height:90px;border-radius:6px;background:var(--bg2);margin-bottom:10px;overflow:hidden;display:flex;flex-direction:column;padding:8px 10px;gap:4px}
+.tpl-name{font-size:13px;font-weight:600;color:var(--text)}
+.tpl-style{font-size:11px;color:var(--text3);margin-top:2px}
+.tpl-check{position:absolute;top:10px;right:10px;width:20px;height:20px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;opacity:0;transition:var(--ease)}
+.tpl-card.selected .tpl-check{opacity:1}
+
+/* Mini resume preview lines */
+.tpl-h{height:9px;border-radius:2px;background:var(--text);margin-bottom:4px;width:55%}
+.tpl-l{height:5px;border-radius:2px;background:var(--border2);margin-bottom:3px}
+.tpl-l.w80{width:80%}.tpl-l.w60{width:60%}.tpl-l.w40{width:40%}.tpl-l.w90{width:90%}
+.tpl-bar{height:1px;background:var(--border);margin:4px 0}
+
+/* ════════════════════════════════════════
+   3. BUILDER
+════════════════════════════════════════ */
+#builder{overflow:hidden}
+.builder-topbar{height:52px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;align-items:center;padding:0 18px;gap:12px;flex-shrink:0;z-index:50}
+.builder-body{display:flex;flex:1;overflow:hidden}
+
+/* LEFT NAV */
+.builder-leftnav{width:200px;border-right:1px solid var(--border);background:var(--surface2);padding:20px 12px;display:flex;flex-direction:column;gap:2px;flex-shrink:0;overflow-y:auto}
+.nav-section-label{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);padding:0 10px;margin-top:14px;margin-bottom:6px}
+.nav-section-label:first-child{margin-top:0}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--r);cursor:pointer;font-size:13px;color:var(--text2);transition:var(--ease);position:relative}
+.nav-item:hover{background:var(--bg2);color:var(--text)}
+.nav-item.active{background:var(--accent-light);color:var(--accent);font-weight:500}
+.nav-item.done .nav-check{opacity:1}
+.nav-check{width:16px;height:16px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:8.5px;color:#fff;opacity:0;margin-left:auto;transition:var(--ease);flex-shrink:0}
+.nav-icon{font-size:14px;width:18px;text-align:center;flex-shrink:0}
+.nav-progress{height:2px;background:var(--border);border-radius:1px;margin:14px 10px 0;overflow:hidden}
+.nav-prog-fill{height:100%;background:var(--accent);border-radius:1px;transition:width 400ms ease;width:30%}
+.nav-prog-label{font-size:10.5px;color:var(--text3);padding:4px 10px 0;display:flex;justify-content:space-between}
+
+/* FORM PANEL */
+.form-panel{flex:1;overflow-y:auto;padding:0;display:flex;flex-direction:column}
+.form-section-page{display:none;flex:1;padding:28px 28px 28px;animation:fadeUp 200ms ease}
+.form-section-page.active{display:block}
+.fsp-title{font-family:'DM Serif Display',serif;font-size:21px;letter-spacing:-.02em;margin-bottom:4px}
+.fsp-sub{font-size:13px;color:var(--text3);margin-bottom:22px;line-height:1.5}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form-field{margin-bottom:13px}
+.form-label{font-size:11px;font-weight:500;color:var(--text3);margin-bottom:5px;display:block;letter-spacing:.04em}
+.form-foot{margin-top:20px;display:flex;justify-content:space-between;align-items:center}
+
+.ai-strip{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;border-radius:var(--r);
+  border:1px dashed var(--border2);background:var(--bg2);
+  cursor:pointer;transition:var(--ease);margin-top:10px;
+}
+.ai-strip:hover{border-color:var(--accent);background:var(--accent-light)}
+.ai-strip-icon{font-size:16px}
+.ai-strip-text{font-size:13px;color:var(--text2);font-weight:500}
+.ai-strip-text span{font-size:11.5px;color:var(--text3);font-weight:400;margin-left:6px}
+
+.skill-wrap{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.sk-tag{padding:4px 10px;border-radius:4px;background:var(--bg2);border:1px solid var(--border);font-size:12px;color:var(--text2);cursor:pointer;transition:var(--ease)}
+.sk-tag:hover{border-color:var(--border2)}
+.sk-tag.on{background:var(--accent-light);border-color:var(--accent);color:var(--accent)}
+.sk-add-row{display:flex;gap:7px;margin-top:8px}
+
+/* PREVIEW PANEL */
+.preview-panel{width:460px;flex-shrink:0;border-left:1px solid var(--border);background:var(--bg2);overflow-y:auto;padding:24px 18px;display:flex;flex-direction:column;align-items:center}
+.preview-label{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:12px;align-self:flex-start}
+
+/* A4 */
+.a4{width:100%;max-width:415px;min-height:588px;background:#fff;box-shadow:var(--shadow-lg);padding:34px 38px;font-family:'Instrument Sans',sans-serif;color:#1a1917;transition:all 180ms ease}
+[data-theme="dark"] .a4{background:#fafaf8}
+.a4-name{font-family:'DM Serif Display',serif;font-size:24px;letter-spacing:-.02em;color:#111;line-height:1;margin-bottom:3px;min-height:30px;transition:all 180ms ease}
+.a4-jobtitle{font-size:11.5px;color:#666;margin-bottom:3px;min-height:16px}
+.a4-contact{display:flex;gap:12px;font-size:9.5px;color:#999;font-family:'DM Mono',monospace;flex-wrap:wrap;margin-top:5px}
+.a4-hr{height:1px;background:#ddd;margin:12px 0}
+.a4-sec{margin-bottom:14px}
+.a4-sec-title{font-size:8.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#888;margin-bottom:7px}
+.a4-entry{margin-bottom:10px}
+.a4-ehead{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px}
+.a4-ename{font-size:11.5px;font-weight:600;color:#222}
+.a4-edate{font-size:9.5px;color:#999;font-family:'DM Mono',monospace}
+.a4-esub{font-size:10.5px;color:#666;margin-bottom:3px;font-style:italic}
+.a4-bullets{padding-left:12px}
+.a4-bullets li{font-size:10.5px;color:#444;line-height:1.65;margin-bottom:1px}
+.a4-skills-row{display:flex;flex-wrap:wrap;gap:5px}
+.a4-sk{font-size:9.5px;color:#555;padding:2px 7px;background:#f2f1ef;border-radius:3px;font-family:'DM Mono',monospace}
+
+/* ════════════════════════════════════════
+   4. FINALISE
+════════════════════════════════════════ */
+#finalise{overflow:hidden}
+.fin-topbar{height:52px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;align-items:center;padding:0 18px;gap:12px;flex-shrink:0}
+.fin-body{display:flex;flex:1;overflow:hidden}
+.fin-preview{flex:1;background:var(--bg2);overflow-y:auto;display:flex;align-items:flex-start;justify-content:center;padding:36px 28px;padding-bottom:90px}
+.fin-sidebar{width:270px;flex-shrink:0;border-left:1px solid var(--border);background:var(--surface);padding:24px 20px;overflow-y:auto;display:flex;flex-direction:column;gap:18px;padding-bottom:90px}
+.fin-score-big{font-family:'DM Serif Display',serif;font-size:42px;letter-spacing:-.03em;line-height:1}
+.fin-score-bar{height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin:8px 0 12px}
+.fin-score-fill{height:100%;width:84%;background:var(--btn);border-radius:3px;transition:width 800ms ease}
+.fin-checks{display:flex;flex-direction:column;gap:6px}
+.fin-check{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2)}
+.fin-check.bad{color:var(--text3)}
+.fin-check .fc-icon{font-size:13px}
+.dl-prog{display:none;flex-direction:column;gap:6px;margin-top:6px}
+.dl-prog.show{display:flex}
+.dl-bar{height:3px;border-radius:2px;background:var(--border);overflow:hidden}
+.dl-fill{height:100%;background:var(--btn);width:0;transition:width 60ms linear;border-radius:2px}
+.dl-pct{font-family:'DM Mono',monospace;font-size:11.5px;color:var(--text3)}
+
+/* ════════════════════════════════════════
+   5. SUCCESS
+════════════════════════════════════════ */
+#success{align-items:center;justify-content:center;text-align:center;padding:40px 24px;overflow-y:auto;padding-bottom:90px}
+.suc-icon{font-size:56px;animation:popIn 400ms cubic-bezier(.34,1.56,.64,1) both;margin-bottom:22px}
+@keyframes popIn{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:scale(1)}}
+.suc-h1{font-family:'DM Serif Display',serif;font-size:40px;letter-spacing:-.025em;margin-bottom:10px}
+.suc-sub{font-size:15.5px;color:var(--text2);margin-bottom:32px}
+.suc-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:44px}
+.int-card{max-width:360px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);padding:20px 22px;opacity:0;transition:opacity 500ms ease 500ms,transform 500ms ease 500ms;transform:translateY(12px)}
+.int-card.vis{opacity:1;transform:translateY(0)}
+.int-card-title{font-size:14px;font-weight:500;margin-bottom:5px}
+.int-card-sub{font-size:12px;color:var(--text3);line-height:1.55;margin-bottom:13px}
+
+/* ════════════════════════════════════════
+   6. AI INTERVIEW — CALLING UI
+════════════════════════════════════════ */
+#interview{overflow:hidden;background:var(--bg)}
+.call-topbar{height:52px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;align-items:center;padding:0 20px;gap:14px;flex-shrink:0}
+.call-body{display:flex;flex:1;overflow:hidden}
+
+/* Main call stage */
+.call-stage{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:32px;position:relative;gap:28px;
+}
+.call-bg-grid{position:absolute;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:48px 48px;opacity:.3;pointer-events:none}
+
+.call-avatar-wrap{position:relative;display:flex;align-items:center;justify-content:center}
+.call-ring{
+  width:160px;height:160px;border-radius:50%;border:2px solid var(--accent);
+  position:absolute;animation:ringPulse 2.5s ease-in-out infinite;opacity:.4;
+}
+.call-ring:nth-child(2){width:200px;height:200px;animation-delay:.6s;opacity:.2}
+.call-ring:nth-child(3){width:240px;height:240px;animation-delay:1.2s;opacity:.1}
+@keyframes ringPulse{0%,100%{transform:scale(1);opacity:.4}50%{transform:scale(1.04);opacity:.15}}
+.call-avatar-circle{
+  width:120px;height:120px;border-radius:50%;background:var(--btn);
+  display:flex;align-items:center;justify-content:center;font-size:46px;
+  position:relative;z-index:1;box-shadow:var(--shadow-lg);
+  border:3px solid var(--surface);
+}
+.call-avatar-speaking{animation:speakBob 1.2s ease-in-out infinite}
+@keyframes speakBob{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
+
+.call-name{font-family:'DM Serif Display',serif;font-size:24px;letter-spacing:-.02em;text-align:center}
+.call-status-row{display:flex;align-items:center;gap:8px;justify-content:center}
+.call-status-dot{width:8px;height:8px;border-radius:50%;background:#4ade80;animation:pulse 1.8s infinite}
+.call-status-text{font-size:13px;color:var(--text3)}
+.call-timer{font-family:'DM Mono',monospace;font-size:13px;color:var(--text3)}
+
+/* Waveform */
+.call-wave{display:flex;align-items:center;gap:3px;height:36px}
+.cw-bar{width:4px;background:var(--accent);border-radius:2px;animation:waveAnim 1s ease-in-out infinite}
+.cw-bar:nth-child(1){height:10px;animation-delay:0s}
+.cw-bar:nth-child(2){height:22px;animation-delay:.1s}
+.cw-bar:nth-child(3){height:30px;animation-delay:.2s}
+.cw-bar:nth-child(4){height:18px;animation-delay:.3s}
+.cw-bar:nth-child(5){height:28px;animation-delay:.4s}
+.cw-bar:nth-child(6){height:14px;animation-delay:.5s}
+.cw-bar:nth-child(7){height:24px;animation-delay:.6s}
+.cw-bar:nth-child(8){height:10px;animation-delay:.7s}
+@keyframes waveAnim{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.3)}}
+.call-wave.idle .cw-bar{animation:none;height:4px}
+
+/* Current question bubble */
+.call-question{
+  max-width:480px;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-xl);padding:16px 20px;text-align:center;
+  box-shadow:var(--shadow-sm);
+}
+.cq-label{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:6px}
+.cq-text{font-size:14px;color:var(--text);line-height:1.6}
+
+/* Controls */
+.call-controls{display:flex;align-items:center;gap:14px}
+.ctrl-btn{width:52px;height:52px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:20px;transition:var(--ease);box-shadow:var(--shadow-sm)}
+.ctrl-btn:hover{transform:scale(1.06);box-shadow:var(--shadow-md)}
+.ctrl-mute{background:var(--surface);border:1px solid var(--border);color:var(--text2)}
+.ctrl-mute.muted{background:var(--bg3);color:var(--text3)}
+.ctrl-end{background:#e53e3e;color:#fff;width:62px;height:62px;font-size:22px}
+.ctrl-end:hover{background:#c53030}
+.ctrl-next{background:var(--btn);color:#fff}
+.ctrl-skip{background:var(--surface);border:1px solid var(--border);color:var(--text2);font-size:12px;font-family:'Instrument Sans',sans-serif;font-weight:500;width:auto;padding:0 14px;border-radius:20px;height:36px}
+
+/* Call sidebar */
+.call-sidebar{
+  width:280px;flex-shrink:0;border-left:1px solid var(--border);
+  background:var(--surface);padding:22px 18px;overflow-y:auto;
+  display:flex;flex-direction:column;gap:14px;
+  padding-bottom:90px;
+}
+.score-card{background:var(--bg2);border-radius:var(--r);padding:12px 13px;margin-bottom:0}
+.sc-label{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:7px}
+.sc-bar{height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:4px}
+.sc-fill{height:100%;border-radius:3px;background:var(--btn);transition:width 600ms ease}
+.sc-val{font-size:11.5px;color:var(--text2);font-family:'DM Mono',monospace}
+.fb-item{font-size:12px;color:var(--text2);line-height:1.6;padding:9px 11px;background:var(--bg2);border-radius:var(--r);border-left:3px solid var(--border2)}
+.fb-item.pos{border-left-color:#4ade80}
+.fb-item.tip{border-left-color:#facc15}
+.q-counter{font-family:'DM Mono',monospace;font-size:12px;color:var(--text3);text-align:center}
+</style>
+</head>
+<body>
+
+<div id="toast"></div>
+
+<!-- ════════ MODALS ════════ -->
+<!-- START MODE MODAL -->
+<div class="modal-overlay hidden" id="startModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">How do you want to start?</div>
+      <div class="modal-sub">Aria will guide you through the rest.</div>
+    </div>
+    <div class="modal-body">
+      <div class="mode-cards">
+        <div class="mode-card selected" id="mc-new" onclick="selectMode('new')">
+          <div class="mc-icon">✦</div>
+          <div class="mc-title">Start Fresh</div>
+          <div class="mc-sub">Blank slate. Fill in your details step by step.</div>
+        </div>
+        <div class="mode-card" id="mc-import" onclick="selectMode('import')">
+          <div class="mc-icon">📎</div>
+          <div class="mc-title">Import Existing</div>
+          <div class="mc-sub">Upload a PDF or paste your old resume.</div>
+        </div>
+        <div class="mode-card" id="mc-dna" onclick="selectMode('dna')">
+          <div class="mc-icon">🧬</div>
+          <div class="mc-title">Career DNA</div>
+          <div class="mc-sub">Pull from your saved profile and experience.</div>
+        </div>
+      </div>
+      <div id="mode-import-box" style="display:none;margin-top:14px;">
+        <div style="border:2px dashed var(--border);border-radius:var(--r-lg);padding:24px;text-align:center;cursor:pointer;color:var(--text3);font-size:13px;" onclick="showToast('Upload feature coming soon')">
+          Drop your resume PDF here, or <strong style="color:var(--accent);">browse</strong>
+        </div>
+      </div>
+      <div id="mode-dna-box" style="display:none;margin-top:14px;background:var(--accent-light);border:1px solid var(--border);border-radius:var(--r-lg);padding:14px 16px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--btn);display:flex;align-items:center;justify-content:center;font-size:15px;color:#fff">AK</div>
+          <div>
+            <div style="font-size:13px;font-weight:500;color:var(--text)">Arjun Kapoor</div>
+            <div style="font-size:11.5px;color:var(--text3)">4 experiences · 2 degrees · 18 skills saved</div>
+          </div>
+          <div style="margin-left:auto;background:var(--green-bg);color:var(--green);font-size:10.5px;font-weight:600;padding:3px 8px;border-radius:4px;">Ready</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('startModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="goToTemplates()">Choose Template →</button>
+    </div>
+  </div>
+</div>
+
+<!-- TEMPLATE MODAL -->
+<div class="modal-overlay hidden" id="tplModal">
+  <div class="modal" style="width:600px">
+    <div class="modal-head">
+      <div class="modal-title">Pick a template</div>
+      <div class="modal-sub">All templates are ATS-friendly and export-ready.</div>
+    </div>
+    <div class="modal-body">
+      <div class="template-grid">
+        <div class="tpl-card selected" id="tpl-0" onclick="selectTpl(0)">
+          <div class="tpl-check">✓</div>
+          <div class="tpl-preview">
+            <div class="tpl-h"></div>
+            <div class="tpl-l w60"></div>
+            <div class="tpl-bar"></div>
+            <div class="tpl-l w80"></div>
+            <div class="tpl-l w90"></div>
+            <div class="tpl-l w40"></div>
+          </div>
+          <div class="tpl-name">Meridian</div>
+          <div class="tpl-style">Clean · Single column · Classic</div>
+        </div>
+        <div class="tpl-card" id="tpl-1" onclick="selectTpl(1)">
+          <div class="tpl-check">✓</div>
+          <div class="tpl-preview" style="display:grid;grid-template-columns:1fr 2fr;gap:6px">
+            <div style="background:var(--bg3);border-radius:3px;padding:5px;display:flex;flex-direction:column;gap:3px">
+              <div style="height:18px;width:18px;border-radius:50%;background:var(--border2);margin:0 auto 4px"></div>
+              <div class="tpl-l w80"></div>
+              <div class="tpl-l w60"></div>
+              <div class="tpl-l w80"></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:3px;padding-top:4px">
+              <div class="tpl-h" style="width:70%"></div>
+              <div class="tpl-l w80"></div>
+              <div class="tpl-l w90"></div>
+              <div class="tpl-l w60"></div>
+            </div>
+          </div>
+          <div class="tpl-name">Atlas</div>
+          <div class="tpl-style">Two column · Modern · Sidebar</div>
+        </div>
+        <div class="tpl-card" id="tpl-2" onclick="selectTpl(2)">
+          <div class="tpl-check">✓</div>
+          <div class="tpl-preview">
+            <div style="height:22px;background:var(--text);border-radius:3px;margin-bottom:6px;display:flex;align-items:center;padding:0 6px;gap:4px">
+              <div style="width:30%;height:7px;background:rgba(255,255,255,.7);border-radius:2px"></div>
+            </div>
+            <div class="tpl-l w80"></div>
+            <div class="tpl-l w90"></div>
+            <div class="tpl-l w40"></div>
+            <div class="tpl-bar"></div>
+            <div class="tpl-l w70"></div>
+          </div>
+          <div class="tpl-name">Obsidian</div>
+          <div class="tpl-style">Bold header · Dark accent · Executive</div>
+        </div>
+        <div class="tpl-card" id="tpl-3" onclick="selectTpl(3)">
+          <div class="tpl-check">✓</div>
+          <div class="tpl-preview">
+            <div style="display:flex;align-items:flex-start;gap:5px;margin-bottom:5px">
+              <div style="width:3px;height:40px;background:var(--accent);border-radius:2px;flex-shrink:0;margin-top:2px"></div>
+              <div style="flex:1;display:flex;flex-direction:column;gap:3px">
+                <div class="tpl-h" style="width:60%"></div>
+                <div class="tpl-l w80"></div>
+              </div>
+            </div>
+            <div class="tpl-l w90"></div>
+            <div class="tpl-l w60"></div>
+          </div>
+          <div class="tpl-name">Axis</div>
+          <div class="tpl-style">Accent line · Minimal · Creative</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('tplModal');openModal('startModal')">← Back</button>
+      <button class="btn btn-primary" onclick="startBuilder()">Start Building →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     1. LANDING
+════════════════════════════════════════ -->
+<div id="landing" class="screen active">
+  <div class="land-grid"></div>
+  <nav class="land-nav">
+    <div class="logo">Gaply<span>tiq</span></div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <button class="btn btn-ghost btn-sm" onclick="goto('dashboard')">Sign in</button>
+      <button class="tt" onclick="toggleTheme()">☀</button>
+    </div>
+  </nav>
+  <div class="land-hero">
+    <div class="land-pill">AI Resume Platform · Beta</div>
+    <h1 class="land-h1">We build your<br><em>resume.</em></h1>
+    <p class="land-sub">From rough ideas to a polished, ATS-ready resume — in minutes, not hours.</p>
+    <div class="land-cta-row">
+      <button class="btn btn-primary land-cta" onclick="goto('dashboard')">Start Building →</button>
+      <button class="btn btn-secondary land-cta" onclick="goto('dashboard')">See how it works</button>
+    </div>
+  </div>
+  <div class="land-foot label-caps">Trusted by 2,400+ job seekers</div>
+</div>
+
+<!-- ════════════════════════════════════════
+     2. DASHBOARD
+════════════════════════════════════════ -->
+<div id="dashboard" class="screen">
+  <div class="dash-topbar">
+    <div class="dash-logo">Gaplytiq</div>
+    <div class="divider"></div>
+    <!-- THE AGENT SEARCH BAR -->
+    <div class="dash-search-wrap">
+      <span class="dash-search-icon">✦</span>
+      <input class="dash-search" id="dashSearch" placeholder="Ask Aria anything — build a resume, improve bullets, check ATS score…" autocomplete="off" oninput="handleSearch(this.value)" onblur="setTimeout(()=>hideDrop(),160)" onfocus="if(this.value.length>0)showDrop()">
+      <span class="search-badge">⌘ K</span>
+      <div class="search-drop hidden" id="searchDrop">
+        <div class="sd-section">
+          <div class="sd-section-label">Suggested</div>
+          <div class="sd-item" onclick="openModal('startModal')">
+            <span class="si">📝</span>
+            <div><div>Build a new resume</div><div class="sd-item-sub">Start from scratch, import, or use your Career DNA</div></div>
+          </div>
+          <div class="sd-item" onclick="showToast('Feature coming soon')">
+            <span class="si">✨</span>
+            <div><div>Improve my existing resume</div><div class="sd-item-sub">Paste your resume — Aria will rewrite it</div></div>
+          </div>
+          <div class="sd-item" onclick="showToast('Feature coming soon')">
+            <span class="si">🎯</span>
+            <div><div>Analyze ATS score</div><div class="sd-item-sub">Check how your resume performs against a job</div></div>
+          </div>
+          <div class="sd-item" onclick="goto('interview')">
+            <span class="si">🎙</span>
+            <div><div>Practice interview</div><div class="sd-item-sub">AI interview call — role-specific questions</div></div>
+          </div>
+        </div>
+        <div class="sd-sep"></div>
+        <div class="sd-section">
+          <div class="sd-section-label">Recent</div>
+          <div class="sd-item" onclick="goto('builder')">
+            <span class="si">📄</span>
+            <div><div>Product Manager — Groww</div><div class="sd-item-sub">Last edited 2 days ago</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="dash-tr">
+      <button class="tt" onclick="toggleTheme()">☀</button>
+      <div class="avatar">AK</div>
+    </div>
+  </div>
+
+  <div class="dash-body">
+    <div class="sidebar">
+      <div class="sb-item active">⊞<span class="sb-tip">Home</span></div>
+      <div class="sb-item" onclick="showToast('Coming soon')">📄<span class="sb-tip">Resumes</span></div>
+      <div class="sb-item" onclick="showToast('Coming soon')">📊<span class="sb-tip">Analytics</span></div>
+      <div class="sb-item" onclick="showToast('Coming soon')">⚙<span class="sb-tip">Settings</span></div>
+    </div>
+    <div class="dash-main">
+      <div class="dash-greeting">
+        <div class="g-label">Good morning</div>
+        <h2>Arjun Kapoor</h2>
+      </div>
+
+      <div style="margin-bottom:6px" class="label-caps">Quick Actions</div>
+      <div class="qa-cards" style="margin-top:10px">
+        <div class="qa-card feat" onclick="openModal('startModal')">
+          <div class="qc-icon">📝</div>
+          <div class="qc-title" style="color:#fff">Build Resume</div>
+          <div class="qc-sub">Start from scratch, import, or use your Career DNA.</div>
+        </div>
+        <div class="qa-card dim">
+          <span class="soon-tag">Soon</span>
+          <div class="qc-icon">🎯</div>
+          <div class="qc-title">ATS Optimizer</div>
+          <div class="qc-sub">Score and improve for ATS filters.</div>
+        </div>
+        <div class="qa-card dim">
+          <span class="soon-tag">Soon</span>
+          <div class="qc-icon">✨</div>
+          <div class="qc-title">Resume Enhancer</div>
+          <div class="qc-sub">Rewrite weak bullets into strong ones.</div>
+        </div>
+      </div>
+
+      <div class="rl-header" style="margin-top:28px">
+        <div class="label-caps">Your Resumes</div>
+        <button class="btn btn-secondary btn-sm" onclick="openModal('startModal')">+ New Resume</button>
+      </div>
+      <div class="rl-items">
+        <div class="rl-item" onclick="goto('builder')">
+          <div class="rli-icon">📄</div>
+          <div class="rli-info">
+            <div class="rli-name">Product Manager — Groww</div>
+            <div class="rli-meta">Updated 2 days ago · 1 page · Meridian</div>
+          </div>
+          <div class="rli-status s-complete">Complete</div>
+          <div class="rli-open">Open →</div>
+        </div>
+        <div class="rl-item" onclick="goto('builder')">
+          <div class="rli-icon">📄</div>
+          <div class="rli-info">
+            <div class="rli-name">Software Engineer — FAANG Variant</div>
+            <div class="rli-meta">Updated 5 days ago · 1 page · Atlas</div>
+          </div>
+          <div class="rli-status s-draft">Draft</div>
+          <div class="rli-open">Open →</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AGENT BAR for dashboard -->
+  <div id="agentBar" style="">
+    <div class="agent-inner">
+      <div class="agent-avatar">🤖</div>
+      <div class="agent-bubble">
+        <span class="agent-dot"></span>
+        <input class="agent-input" id="agentInputDash" placeholder="Ask Aria — 'help me tailor my resume for a Product role at Swiggy'" onkeydown="if(event.key==='Enter')agentReply(this,'dash')">
+      </div>
+      <div class="agent-actions">
+        <div class="agent-chip" onclick="openModal('startModal')">Build Resume</div>
+        <div class="agent-chip" onclick="showToast('ATS check coming soon')">ATS Check</div>
+        <div class="agent-chip primary-chip" onclick="openModal('startModal')">✦ New</div>
+      </div>
+      <span class="agent-name">Aria</span>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     3. BUILDER
+════════════════════════════════════════ -->
+<div id="builder" class="screen">
+  <div class="builder-topbar">
+    <button class="btn btn-ghost btn-sm" onclick="goto('dashboard')">← Back</button>
+    <div class="divider"></div>
+    <span style="font-size:13.5px;color:var(--text2)"><strong style="color:var(--text)">Product Manager</strong> — Groww · Meridian</span>
+    <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+      <span class="label-caps" style="font-size:10px">30% done</span>
+      <div style="width:80px;height:3px;background:var(--border);border-radius:2px;overflow:hidden"><div style="height:100%;width:30%;background:var(--accent);border-radius:2px"></div></div>
+      <button class="btn btn-ghost btn-sm" onclick="showToast('Draft saved ✓')">Save</button>
+      <button class="btn btn-primary btn-sm" onclick="goto('finalise')">Finalise →</button>
+      <button class="tt" onclick="toggleTheme()">☀</button>
+    </div>
+  </div>
+
+  <div class="builder-body">
+    <!-- LEFT NAV -->
+    <div class="builder-leftnav">
+      <div class="label-caps" style="padding:0 10px;margin-bottom:8px">Resume Sections</div>
+
+      <div class="nav-item active" id="nav-basics" onclick="showSection('basics')">
+        <span class="nav-icon">👤</span> Basics
+        <div class="nav-check">✓</div>
+      </div>
+      <div class="nav-item done" id="nav-experience" onclick="showSection('experience')">
+        <span class="nav-icon">💼</span> Experience
+        <div class="nav-check">✓</div>
+      </div>
+      <div class="nav-item" id="nav-education" onclick="showSection('education')">
+        <span class="nav-icon">🎓</span> Education
+        <div class="nav-check">✓</div>
+      </div>
+      <div class="nav-item" id="nav-skills" onclick="showSection('skills')">
+        <span class="nav-icon">⚡</span> Skills
+        <div class="nav-check">✓</div>
+      </div>
+      <div class="nav-item" id="nav-summary" onclick="showSection('summary')">
+        <span class="nav-icon">📝</span> Summary
+        <div class="nav-check">✓</div>
+      </div>
+
+      <div class="label-caps" style="padding:0 10px;margin-top:18px;margin-bottom:8px">Optional</div>
+      <div class="nav-item" onclick="showToast('Section coming soon')">
+        <span class="nav-icon">🏆</span> Certifications
+        <div class="nav-check">✓</div>
+      </div>
+      <div class="nav-item" onclick="showToast('Section coming soon')">
+        <span class="nav-icon">🔗</span> Projects
+        <div class="nav-check">✓</div>
+      </div>
+
+      <div class="nav-progress">
+        <div class="nav-prog-fill" id="navProgFill"></div>
+      </div>
+      <div class="nav-prog-label">
+        <span>Progress</span><span id="navProgPct">30%</span>
+      </div>
+    </div>
+
+    <!-- FORM PANEL -->
+    <div class="form-panel" style="border-right:1px solid var(--border)">
+      <!-- BASICS -->
+      <div class="form-section-page active" id="sec-basics">
+        <div style="padding:28px 28px 0">
+          <div class="fsp-title">Basics</div>
+          <div class="fsp-sub">Your name and contact details. Keep it clean and accurate.</div>
+        </div>
+        <div style="padding:0 28px 28px">
+          <div class="form-field">
+            <label class="form-label">Full Name</label>
+            <input class="input" id="f-name" value="Arjun Kapoor" oninput="syncPreview()">
+          </div>
+          <div class="form-field">
+            <label class="form-label">Job Title</label>
+            <input class="input" id="f-title" value="Senior Product Manager" oninput="syncPreview()">
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <label class="form-label">Email</label>
+              <input class="input" id="f-email" value="arjun@email.com" oninput="syncPreview()">
+            </div>
+            <div class="form-field">
+              <label class="form-label">Phone</label>
+              <input class="input" id="f-phone" value="+91 98765 43210" oninput="syncPreview()">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <label class="form-label">Location</label>
+              <input class="input" id="f-location" value="Bangalore, India" oninput="syncPreview()">
+            </div>
+            <div class="form-field">
+              <label class="form-label">LinkedIn</label>
+              <input class="input" id="f-linkedin" value="linkedin.com/in/arjunk" oninput="syncPreview()">
+            </div>
+          </div>
+          <div class="form-foot">
+            <span></span>
+            <button class="btn btn-primary btn-sm" onclick="nextSection('basics')">Next: Experience →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- EXPERIENCE -->
+      <div class="form-section-page" id="sec-experience">
+        <div style="padding:28px 28px 0">
+          <div class="fsp-title">Experience</div>
+          <div class="fsp-sub">What have you built, led, or shipped? Be specific — numbers matter.</div>
+        </div>
+        <div style="padding:0 28px 28px">
+          <div class="form-field">
+            <label class="form-label">Company</label>
+            <input class="input" id="f-company" value="Groww" oninput="syncPreview()">
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <label class="form-label">Role</label>
+              <input class="input" id="f-role" value="Product Manager" oninput="syncPreview()">
+            </div>
+            <div class="form-field">
+              <label class="form-label">Duration</label>
+              <input class="input" id="f-duration" value="2021 – Present" oninput="syncPreview()">
+            </div>
+          </div>
+          <div class="form-field">
+            <label class="form-label">Accomplishments <span style="color:var(--text3);font-weight:400">(rough notes or bullets)</span></label>
+            <textarea class="input" id="f-exp" rows="5" oninput="syncPreview()">Led end-to-end product lifecycle for mutual funds used by 3.2M users.
+Improved user onboarding conversion by 28% through A/B testing.
+Collaborated with engineering to ship 0→1 SIP reminder feature in 6 weeks.</textarea>
+          </div>
+          <div class="ai-strip" onclick="aiRewriteExp()">
+            <span class="ai-strip-icon">✦</span>
+            <div>
+              <div class="ai-strip-text">AI Autopilot — Rewrite & Strengthen <span id="aiStripLabel">Make these bullets land harder.</span></div>
+            </div>
+          </div>
+          <div class="form-foot">
+            <button class="btn btn-ghost btn-sm" onclick="showSection('basics')">← Basics</button>
+            <button class="btn btn-primary btn-sm" onclick="nextSection('experience')">Next: Education →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- EDUCATION -->
+      <div class="form-section-page" id="sec-education">
+        <div style="padding:28px 28px 0">
+          <div class="fsp-title">Education</div>
+          <div class="fsp-sub">Your academic background. Degree, institution, year.</div>
+        </div>
+        <div style="padding:0 28px 28px">
+          <div class="form-field">
+            <label class="form-label">Institution</label>
+            <input class="input" id="f-school" value="IIT Bombay" oninput="syncPreview()">
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <label class="form-label">Degree</label>
+              <input class="input" id="f-degree" value="B.Tech · Computer Science" oninput="syncPreview()">
+            </div>
+            <div class="form-field">
+              <label class="form-label">Year</label>
+              <input class="input" id="f-year" value="2017 – 2021" oninput="syncPreview()">
+            </div>
+          </div>
+          <div class="form-field">
+            <label class="form-label">Notable Achievement <span style="color:var(--text3);font-weight:400">(optional)</span></label>
+            <input class="input" placeholder="e.g. Dean's List, Gold Medal, GPA 9.2" oninput="syncPreview()">
+          </div>
+          <div class="form-foot">
+            <button class="btn btn-ghost btn-sm" onclick="showSection('experience')">← Experience</button>
+            <button class="btn btn-primary btn-sm" onclick="nextSection('education')">Next: Skills →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SKILLS -->
+      <div class="form-section-page" id="sec-skills">
+        <div style="padding:28px 28px 0">
+          <div class="fsp-title">Skills</div>
+          <div class="fsp-sub">Pick the skills most relevant to this role. Don't list everything.</div>
+        </div>
+        <div style="padding:0 28px 28px">
+          <div class="skill-wrap" id="skillTags">
+            <div class="sk-tag on" onclick="toggleSk(this)">Product Strategy</div>
+            <div class="sk-tag on" onclick="toggleSk(this)">Data Analysis</div>
+            <div class="sk-tag on" onclick="toggleSk(this)">SQL</div>
+            <div class="sk-tag on" onclick="toggleSk(this)">A/B Testing</div>
+            <div class="sk-tag on" onclick="toggleSk(this)">Figma</div>
+            <div class="sk-tag" onclick="toggleSk(this)">Python</div>
+            <div class="sk-tag" onclick="toggleSk(this)">JIRA</div>
+            <div class="sk-tag" onclick="toggleSk(this)">Agile / Scrum</div>
+            <div class="sk-tag" onclick="toggleSk(this)">OKRs</div>
+            <div class="sk-tag" onclick="toggleSk(this)">Mixpanel</div>
+          </div>
+          <div class="sk-add-row" style="margin-top:12px">
+            <input class="input" id="newSkill" placeholder="Add a skill…" style="font-size:12.5px;padding:7px 11px" onkeydown="if(event.key==='Enter')addSkill()">
+            <button class="btn btn-secondary btn-sm" onclick="addSkill()">Add</button>
+          </div>
+          <div class="form-foot">
+            <button class="btn btn-ghost btn-sm" onclick="showSection('education')">← Education</button>
+            <button class="btn btn-primary btn-sm" onclick="nextSection('skills')">Next: Summary →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUMMARY -->
+      <div class="form-section-page" id="sec-summary">
+        <div style="padding:28px 28px 0">
+          <div class="fsp-title">Summary</div>
+          <div class="fsp-sub">2–3 lines. What makes you a strong fit? Be direct, not generic.</div>
+        </div>
+        <div style="padding:0 28px 28px">
+          <div class="form-field">
+            <textarea class="input" id="f-summary" rows="4" placeholder="e.g. Product Manager with 4 years of experience building financial products used by millions…" oninput="syncPreview()">Product Manager with 4+ years building consumer fintech at Groww and Razorpay. Known for shipping 0→1 features with measurable user impact and strong cross-functional leadership.</textarea>
+          </div>
+          <div class="ai-strip" onclick="aiSummary()">
+            <span class="ai-strip-icon">✦</span>
+            <div class="ai-strip-text">AI Summary Writer <span>Generate a punchy 2-liner from your experience.</span></div>
+          </div>
+          <div class="form-foot">
+            <button class="btn btn-ghost btn-sm" onclick="showSection('skills')">← Skills</button>
+            <button class="btn btn-primary" onclick="goto('finalise')">Finalise Resume →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LIVE PREVIEW -->
+    <div class="preview-panel">
+      <div class="preview-label">Live Preview</div>
+      <div class="a4" id="resumeA4">
+        <div class="a4-name" id="p-name">Arjun Kapoor</div>
+        <div class="a4-jobtitle" id="p-title">Senior Product Manager</div>
+        <div class="a4-contact">
+          <span id="p-email">arjun@email.com</span>
+          <span id="p-phone">+91 98765 43210</span>
+          <span id="p-loc">Bangalore, India</span>
+          <span id="p-li">linkedin.com/in/arjunk</span>
+        </div>
+        <div class="a4-hr"></div>
+        <div class="a4-sec" id="a4-summary-sec" style="display:none">
+          <div class="a4-sec-title">Summary</div>
+          <div style="font-size:10.5px;color:#444;line-height:1.65" id="p-summary"></div>
+          <div class="a4-hr"></div>
+        </div>
+        <div class="a4-sec">
+          <div class="a4-sec-title">Experience</div>
+          <div class="a4-entry">
+            <div class="a4-ehead">
+              <span class="a4-ename" id="p-company">Groww</span>
+              <span class="a4-edate" id="p-dur">2021 – Present</span>
+            </div>
+            <div class="a4-esub" id="p-role">Product Manager</div>
+            <ul class="a4-bullets" id="p-bullets">
+              <li>Led end-to-end product lifecycle for mutual funds used by 3.2M users.</li>
+              <li>Improved user onboarding conversion by 28% through A/B testing.</li>
+              <li>Collaborated with engineering to ship 0→1 SIP reminder feature in 6 weeks.</li>
+            </ul>
+          </div>
+          <div class="a4-entry">
+            <div class="a4-ehead"><span class="a4-ename">Razorpay</span><span class="a4-edate">2019 – 2021</span></div>
+            <div class="a4-esub">Associate Product Manager</div>
+            <ul class="a4-bullets">
+              <li>Owned checkout experience for 40K+ merchants, reducing drop-off by 19%.</li>
+              <li>Launched smart retry logic that recovered ₹8Cr in failed transactions monthly.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="a4-hr"></div>
+        <div class="a4-sec">
+          <div class="a4-sec-title">Education</div>
+          <div class="a4-entry">
+            <div class="a4-ehead">
+              <span class="a4-ename" id="p-school">IIT Bombay</span>
+              <span class="a4-edate" id="p-year">2017 – 2021</span>
+            </div>
+            <div class="a4-esub" id="p-degree">B.Tech · Computer Science</div>
+          </div>
+        </div>
+        <div class="a4-hr"></div>
+        <div class="a4-sec">
+          <div class="a4-sec-title">Skills</div>
+          <div class="a4-skills-row" id="p-skills">
+            <span class="a4-sk">Product Strategy</span>
+            <span class="a4-sk">Data Analysis</span>
+            <span class="a4-sk">SQL</span>
+            <span class="a4-sk">A/B Testing</span>
+            <span class="a4-sk">Figma</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AGENT BAR — Builder -->
+  <div id="agentBar" style="">
+    <div class="agent-inner">
+      <div class="agent-avatar">🤖</div>
+      <div class="agent-bubble">
+        <span class="agent-dot"></span>
+        <input class="agent-input" id="agentInputBuilder" placeholder="Ask Aria — 'strengthen my experience bullets' or 'what's missing?'" onkeydown="if(event.key==='Enter')agentReply(this,'builder')">
+      </div>
+      <div class="agent-actions">
+        <div class="agent-chip" onclick="aiRewriteExp()">✦ Rewrite bullets</div>
+        <div class="agent-chip" onclick="aiSummary()">Generate summary</div>
+        <div class="agent-chip" onclick="showToast('ATS check coming soon')">Check ATS</div>
+      </div>
+      <span class="agent-name">Aria</span>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     4. FINALISE
+════════════════════════════════════════ -->
+<div id="finalise" class="screen">
+  <div class="fin-topbar">
+    <button class="btn btn-ghost btn-sm" onclick="goto('builder')">← Edit</button>
+    <div class="divider"></div>
+    <span style="font-size:13.5px;color:var(--text2)"><strong style="color:var(--text)">Finalise</strong> — Product Manager · Groww</span>
+    <div style="margin-left:auto;display:flex;gap:8px">
+      <button class="tt" onclick="toggleTheme()">☀</button>
+    </div>
+  </div>
+  <div class="fin-body">
+    <div class="fin-preview">
+      <div class="a4" style="max-width:480px;pointer-events:none">
+        <div class="a4-name">Arjun Kapoor</div>
+        <div class="a4-jobtitle">Senior Product Manager</div>
+        <div class="a4-contact"><span>arjun@email.com</span><span>+91 98765 43210</span><span>Bangalore, India</span><span>linkedin.com/in/arjunk</span></div>
+        <div class="a4-hr"></div>
+        <div class="a4-sec">
+          <div class="a4-sec-title">Experience</div>
+          <div class="a4-entry">
+            <div class="a4-ehead"><span class="a4-ename">Groww</span><span class="a4-edate">2021 – Present</span></div>
+            <div class="a4-esub">Product Manager</div>
+            <ul class="a4-bullets" id="fin-bullets">
+              <li>Led end-to-end product lifecycle for mutual funds used by 3.2M users.</li>
+              <li>Improved user onboarding conversion by 28% through A/B testing.</li>
+              <li>Collaborated with engineering to ship 0→1 SIP reminder feature in 6 weeks.</li>
+            </ul>
+          </div>
+          <div class="a4-entry">
+            <div class="a4-ehead"><span class="a4-ename">Razorpay</span><span class="a4-edate">2019 – 2021</span></div>
+            <div class="a4-esub">Associate Product Manager</div>
+            <ul class="a4-bullets">
+              <li>Owned checkout experience for 40K+ merchants, reducing drop-off by 19%.</li>
+              <li>Launched smart retry logic that recovered ₹8Cr in failed transactions monthly.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="a4-hr"></div>
+        <div class="a4-sec">
+          <div class="a4-sec-title">Education</div>
+          <div class="a4-entry">
+            <div class="a4-ehead"><span class="a4-ename">IIT Bombay</span><span class="a4-edate">2017 – 2021</span></div>
+            <div class="a4-esub">B.Tech · Computer Science</div>
+          </div>
+        </div>
+        <div class="a4-hr"></div>
+        <div class="a4-sec">
+          <div class="a4-sec-title">Skills</div>
+          <div class="a4-skills-row"><span class="a4-sk">Product Strategy</span><span class="a4-sk">Data Analysis</span><span class="a4-sk">SQL</span><span class="a4-sk">A/B Testing</span><span class="a4-sk">Figma</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="fin-sidebar">
+      <div>
+        <div class="label-caps" style="margin-bottom:6px">Resume Score</div>
+        <div style="display:flex;align-items:baseline;gap:6px">
+          <span class="fin-score-big">84</span>
+          <span style="font-size:13px;color:var(--text3)">/100</span>
+        </div>
+        <div class="fin-score-bar"><div class="fin-score-fill"></div></div>
+        <div class="fin-checks">
+          <div class="fin-check"><span class="fc-icon">✓</span> Strong action verbs</div>
+          <div class="fin-check"><span class="fc-icon">✓</span> Quantified impact</div>
+          <div class="fin-check"><span class="fc-icon">✓</span> ATS-friendly format</div>
+          <div class="fin-check bad"><span class="fc-icon">○</span> Missing summary section</div>
+          <div class="fin-check bad"><span class="fc-icon">○</span> Add certifications</div>
+        </div>
+      </div>
+      <div class="a4-hr"></div>
+      <div>
+        <div class="label-caps" style="margin-bottom:12px">Export & Share</div>
+        <div style="display:flex;flex-direction:column;gap:9px">
+          <button class="btn btn-primary" style="width:100%" onclick="fakeDownload()">↓ Download PDF</button>
+          <button class="btn btn-secondary" style="width:100%" onclick="showToast('Saved ✓')">Save to Gaplytiq</button>
+          <button class="btn btn-secondary" style="width:100%" onclick="shareLink()">Share Link</button>
+        </div>
+        <div class="dl-prog" id="dlProg" style="margin-top:12px">
+          <div class="dl-bar"><div class="dl-fill" id="dlFill"></div></div>
+          <span class="dl-pct" id="dlPct">0%</span>
+        </div>
+      </div>
+      <div class="a4-hr"></div>
+      <button class="btn btn-primary" style="width:100%" onclick="goto('success')">Mark as Complete →</button>
+    </div>
+  </div>
+
+  <!-- AGENT BAR — Finalise -->
+  <div id="agentBar">
+    <div class="agent-inner">
+      <div class="agent-avatar">🤖</div>
+      <div class="agent-bubble">
+        <span class="agent-dot"></span>
+        <input class="agent-input" id="agentInputFin" placeholder="Ask Aria — 'what should I fix before applying?' or 'check for gaps'" onkeydown="if(event.key==='Enter')agentReply(this,'fin')">
+      </div>
+      <div class="agent-actions">
+        <div class="agent-chip" onclick="showAgentReply('fin','Your resume scores 84/100. Add a summary and one certification to hit 93+. Your bullets are strong — especially the A/B testing result.')">✦ What to improve?</div>
+        <div class="agent-chip" onclick="fakeDownload()">Download PDF</div>
+        <div class="agent-chip primary-chip" onclick="goto('success')">Finish →</div>
+      </div>
+      <span class="agent-name">Aria</span>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     5. SUCCESS
+════════════════════════════════════════ -->
+<div id="success" class="screen" style="padding-bottom:90px">
+  <div style="position:absolute;top:16px;right:16px"><button class="tt" onclick="toggleTheme()">☀</button></div>
+  <div class="suc-icon">🚀</div>
+  <h1 class="suc-h1">Your Resume is Ready</h1>
+  <p class="suc-sub">You're good to go. Go get that job.</p>
+  <div class="suc-actions">
+    <button class="btn btn-secondary" onclick="goto('dashboard')">← Dashboard</button>
+    <button class="btn btn-secondary" onclick="showToast('Downloading resume.pdf…')">Download PDF</button>
+    <button class="btn btn-primary" onclick="goto('builder')">Continue Editing</button>
+  </div>
+  <div class="int-card" id="intCard">
+    <div class="label-caps" style="margin-bottom:8px">Next Step</div>
+    <div class="int-card-title">Want to practice for the interview?</div>
+    <div class="int-card-sub">Aria will ask you role-specific questions and score you in real time — like a real PM interview call.</div>
+    <button class="btn btn-secondary btn-sm" onclick="goto('interview')">Try AI Interview →</button>
+  </div>
+
+  <!-- AGENT BAR — Success -->
+  <div id="agentBar" style="position:fixed;bottom:0;left:0;right:0;z-index:1000;background:var(--surface);border-top:1px solid var(--border)">
+    <div class="agent-inner">
+      <div class="agent-avatar">🤖</div>
+      <div class="agent-bubble">
+        <span class="agent-dot"></span>
+        <input class="agent-input" placeholder="Ask Aria — 'tailor this for Swiggy' or 'start interview prep'" onkeydown="if(event.key==='Enter')agentReply(this,'success')">
+      </div>
+      <div class="agent-actions">
+        <div class="agent-chip" onclick="goto('interview')">🎙 Practice Interview</div>
+        <div class="agent-chip" onclick="goto('builder')">Edit Resume</div>
+      </div>
+      <span class="agent-name">Aria</span>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     6. AI INTERVIEW — CALLING UI
+════════════════════════════════════════ -->
+<div id="interview" class="screen">
+  <div class="call-topbar">
+    <button class="btn btn-ghost btn-sm" onclick="endCall()">← End & Exit</button>
+    <div class="divider"></div>
+    <span style="font-size:13.5px;color:var(--text2)"><strong style="color:var(--text)">AI Interview</strong> — Senior Product Manager</span>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:12px">
+      <div style="display:flex;align-items:center;gap:6px">
+        <div style="width:8px;height:8px;border-radius:50%;background:#e53e3e;animation:pulse 1s infinite"></div>
+        <span class="mono" style="font-size:12px;color:var(--text3)" id="callTimer">04:32</span>
+      </div>
+      <button class="tt" onclick="toggleTheme()">☀</button>
+    </div>
+  </div>
+
+  <div class="call-body">
+    <!-- CALL STAGE -->
+    <div class="call-stage">
+      <div class="call-bg-grid"></div>
+
+      <!-- Avatar with rings -->
+      <div class="call-avatar-wrap">
+        <div class="call-ring"></div>
+        <div class="call-ring"></div>
+        <div class="call-ring"></div>
+        <div class="call-avatar-circle call-avatar-speaking" id="callAvatar">🤖</div>
+      </div>
+
+      <div style="text-align:center">
+        <div class="call-name">Aria · Interview AI</div>
+        <div class="call-status-row" style="margin-top:6px">
+          <div class="call-status-dot"></div>
+          <span class="call-status-text" id="callStatusText">Speaking…</span>
+          <span style="margin:0 6px;color:var(--text3)">·</span>
+          <span class="call-timer" id="callTimerDisplay">04:32</span>
+        </div>
+      </div>
+
+      <!-- Waveform -->
+      <div class="call-wave" id="callWave">
+        <div class="cw-bar"></div><div class="cw-bar"></div><div class="cw-bar"></div>
+        <div class="cw-bar"></div><div class="cw-bar"></div><div class="cw-bar"></div>
+        <div class="cw-bar"></div><div class="cw-bar"></div>
+      </div>
+
+      <!-- Current question -->
+      <div class="call-question">
+        <div class="cq-label">Question 2 of 6</div>
+        <div class="cq-text" id="callQuestion">Tell me about a time you had to make a product decision with incomplete data. What was your process, and what was the outcome?</div>
+      </div>
+
+      <!-- Controls -->
+      <div class="call-controls">
+        <button class="ctrl-btn ctrl-mute" id="muteBtn" onclick="toggleMute()" title="Mute">🎙</button>
+        <button class="ctrl-btn ctrl-end" onclick="endCall()" title="End call">✕</button>
+        <button class="ctrl-btn ctrl-next" onclick="nextQuestion()" title="Next question">→</button>
+        <button class="ctrl-btn ctrl-skip" onclick="nextQuestion()">Skip question</button>
+      </div>
+
+      <div class="q-counter" id="qCounter">Question 2 / 6 · Round 1 of 2</div>
+    </div>
+
+    <!-- SCORE SIDEBAR -->
+    <div class="call-sidebar">
+      <div class="label-caps" style="margin-bottom:4px">Live Scoring</div>
+
+      <div class="score-card">
+        <div class="sc-label">Clarity</div>
+        <div class="sc-bar"><div class="sc-fill" id="sc-clarity" style="width:78%"></div></div>
+        <div class="sc-val" id="sv-clarity">78 / 100</div>
+      </div>
+      <div class="score-card">
+        <div class="sc-label">Structure (STAR)</div>
+        <div class="sc-bar"><div class="sc-fill" id="sc-struct" style="width:65%"></div></div>
+        <div class="sc-val" id="sv-struct">65 / 100</div>
+      </div>
+      <div class="score-card">
+        <div class="sc-label">Impact & Numbers</div>
+        <div class="sc-bar"><div class="sc-fill" id="sc-impact" style="width:82%"></div></div>
+        <div class="sc-val" id="sv-impact">82 / 100</div>
+      </div>
+      <div class="score-card">
+        <div class="sc-label">Conciseness</div>
+        <div class="sc-bar"><div class="sc-fill" id="sc-conc" style="width:70%"></div></div>
+        <div class="sc-val" id="sv-conc">70 / 100</div>
+      </div>
+
+      <div class="a4-hr"></div>
+      <div class="label-caps">Feedback</div>
+      <div id="feedbackList" style="display:flex;flex-direction:column;gap:7px;margin-top:2px">
+        <div class="fb-item pos">Strong point. 50K users in 2 weeks is a compelling outcome.</div>
+        <div class="fb-item tip">Try making this more impact-focused — include the business metric.</div>
+        <div class="fb-item">Keep it concise. Aim for STAR format on every answer.</div>
+      </div>
+
+      <div class="a4-hr"></div>
+      <div class="label-caps" style="margin-bottom:8px">Questions Left</div>
+      <div style="display:flex;flex-direction:column;gap:5px" id="qList">
+        <div style="font-size:12px;color:var(--text3);padding:6px 0;border-bottom:1px solid var(--border)">✓ <span style="text-decoration:line-through">Introduce yourself</span></div>
+        <div style="font-size:12px;color:var(--text);padding:6px 0;border-bottom:1px solid var(--border);font-weight:500">● Incomplete data decision</div>
+        <div style="font-size:12px;color:var(--text3);padding:6px 0;border-bottom:1px solid var(--border)">○ Prioritization framework</div>
+        <div style="font-size:12px;color:var(--text3);padding:6px 0;border-bottom:1px solid var(--border)">○ Conflict with engineering</div>
+        <div style="font-size:12px;color:var(--text3);padding:6px 0;border-bottom:1px solid var(--border)">○ Failed product & learning</div>
+        <div style="font-size:12px;color:var(--text3);padding:6px 0">○ Product critique</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AGENT BAR — Interview -->
+  <div id="agentBar">
+    <div class="agent-inner">
+      <div class="agent-avatar">🤖</div>
+      <div class="agent-bubble">
+        <span class="agent-dot"></span>
+        <input class="agent-input" placeholder="Type your answer here — Aria will evaluate it when you press Enter…" id="interviewAnswerInput" onkeydown="if(event.key==='Enter')submitAnswer(this)">
+      </div>
+      <div class="agent-actions">
+        <div class="agent-chip" onclick="nextQuestion()">Next Question →</div>
+        <div class="agent-chip" onclick="showToast('Hint: Use STAR format — Situation, Task, Action, Result')">💡 Hint</div>
+      </div>
+      <span class="agent-name">Aria</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════ -->
+<script>
+// ─ NAVIGATION ─
+function goto(screen) {
+  document.querySelectorAll('.screen').forEach(s => { s.classList.remove('active'); s.style.display='none'; });
+  const el = document.getElementById(screen);
+  el.style.display = 'flex';
+  requestAnimationFrame(() => el.classList.add('active'));
+  if (screen==='success') setTimeout(()=>document.getElementById('intCard').classList.add('vis'), 600);
+  if (screen==='interview') startCallTimer();
+  window.scrollTo(0,0);
+}
+
+// ─ THEME ─
+function toggleTheme() {
+  const d = document.documentElement;
+  const dark = d.getAttribute('data-theme')==='dark';
+  d.setAttribute('data-theme', dark ? 'light' : 'dark');
+  document.querySelectorAll('.tt').forEach(t=>t.textContent=dark?'☀':'☾');
+}
+
+// ─ TOAST ─
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2400);
+}
+
+// ─ MODALS ─
+function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+let selectedMode = 'new', selectedTpl = 0;
+
+function selectMode(m) {
+  selectedMode = m;
+  ['new','import','dna'].forEach(x => {
+    document.getElementById('mc-'+x).classList.toggle('selected', x===m);
+  });
+  document.getElementById('mode-import-box').style.display = m==='import' ? 'block' : 'none';
+  document.getElementById('mode-dna-box').style.display = m==='dna' ? 'block' : 'none';
+}
+
+function goToTemplates() {
+  closeModal('startModal');
+  openModal('tplModal');
+}
+
+function selectTpl(i) {
+  selectedTpl = i;
+  document.querySelectorAll('.tpl-card').forEach((c,idx)=>c.classList.toggle('selected',idx===i));
+}
+
+function startBuilder() {
+  closeModal('tplModal');
+  goto('builder');
+  setAgentBuilderMsg();
+}
+
+// ─ AGENT CONTEXT MESSAGES ─
+function setAgentBuilderMsg() {
+  const msgs = {
+    new: "Let's build this from scratch. Start with your basics — name, title, contact details.",
+    import: "I've detected your previous resume. I'll pre-fill the fields — review and refine each section.",
+    dna: "I've loaded your Career DNA. Your 4 experiences and 18 skills are ready. Let's shape your resume."
+  };
+  const templates = ['Meridian','Atlas','Obsidian','Axis'];
+  const inp = document.getElementById('agentInputBuilder');
+  if (inp) inp.placeholder = msgs[selectedMode] || msgs.new;
+  showAgentReply('builder', msgs[selectedMode] || msgs.new);
+}
+
+// ─ AGENT BAR ─
+const agentReplies = {
+  dash: [
+    "Sure — let's build your resume. Want to start fresh, import an existing one, or use your Career DNA?",
+    "I can help with that. Your Groww PM resume is 84/100 — want me to improve the experience bullets?",
+    "Great question. Let me pull the best keywords for a Product Manager role at Swiggy."
+  ],
+  builder: [
+    "Your experience bullets are solid. Want me to add stronger numbers to the Razorpay entry too?",
+    "Looks good — the A/B testing result is particularly strong. Keep it concise in your summary.",
+    "Missing a summary section. That could bump your ATS score from 84 to 91+."
+  ],
+  fin: [
+    "Your resume scores 84/100. Add a summary and one certification to hit 93+.",
+    "Strong bullets, especially the A/B testing result. The Groww entry is your strongest section.",
+    "ATS check passed. This resume will clear 90%+ of automated filters for PM roles."
+  ],
+  success: [
+    "You're ready to apply. Want me to tailor this resume for a specific company or role?",
+    "Great work. Head to the interview lab to practice before your first call."
+  ]
+};
+let agentIdxMap = {dash:0,builder:0,fin:0,success:0};
+
+function agentReply(inputEl, context) {
+  const val = inputEl.value.trim();
+  if (!val) return;
+  inputEl.value = '';
+  const replies = agentReplies[context] || agentReplies.dash;
+  const reply = replies[agentIdxMap[context] % replies.length];
+  agentIdxMap[context]++;
+  showAgentReply(context, reply);
+}
+
+function showAgentReply(context, msg) {
+  // flash the agent bubble
+  const inputs = {dash:'agentInputDash',builder:'agentInputBuilder',fin:'agentInputFin'};
+  const id = inputs[context];
+  if (!id) return;
+  const inp = document.getElementById(id);
+  if (!inp) return;
+  const bubble = inp.closest('.agent-bubble');
+  bubble.style.borderColor = 'var(--accent)';
+  bubble.style.boxShadow = '0 0 0 3px var(--accent-glow)';
+  inp.placeholder = msg;
+  setTimeout(()=>{ bubble.style.borderColor=''; bubble.style.boxShadow=''; }, 2800);
+}
+
+// ─ SEARCH ─
+function handleSearch(val) {
+  const drop = document.getElementById('searchDrop');
+  if (val.length > 0) { drop.classList.remove('hidden'); }
+  else drop.classList.add('hidden');
+}
+function hideDrop() { document.getElementById('searchDrop').classList.add('hidden'); }
+function showDrop() { document.getElementById('searchDrop').classList.remove('hidden'); }
+
+// ─ BUILDER NAV ─
+let sections = ['basics','experience','education','skills','summary'];
+let sectionProgress = {basics:true, experience:true, education:false, skills:false, summary:false};
+
+function showSection(name) {
+  sections.forEach(s => {
+    document.getElementById('sec-'+s).classList.toggle('active', s===name);
+    const nav = document.getElementById('nav-'+s);
+    if (nav) nav.classList.toggle('active', s===name);
+  });
+  updateNavProgress();
+  // Agent context hint
+  const hints = {
+    basics: "Fill in your basics — these show up at the top of your resume. Keep your title role-specific.",
+    experience: "Your experience is your resume's backbone. Use strong verbs and add numbers wherever you can.",
+    education: "Add your most recent degree first. Optional: include notable achievements or GPA.",
+    skills: "Pick 5–8 skills most relevant to the role. Quality over quantity.",
+    summary: "A good summary is 2–3 punchy lines. Tell them who you are and what you do best."
+  };
+  const inp = document.getElementById('agentInputBuilder');
+  if (inp) inp.placeholder = "Ask Aria — '" + (hints[name]||'') + "'";
+}
+
+function nextSection(current) {
+  sectionProgress[current] = true;
+  const nav = document.getElementById('nav-'+current);
+  if (nav) nav.classList.add('done');
+  const idx = sections.indexOf(current);
+  if (idx < sections.length-1) showSection(sections[idx+1]);
+  updateNavProgress();
+}
+
+function updateNavProgress() {
+  const done = Object.values(sectionProgress).filter(Boolean).length;
+  const pct = Math.round((done/sections.length)*100);
+  const fill = document.getElementById('navProgFill');
+  const pctEl = document.getElementById('navProgPct');
+  if (fill) fill.style.width = pct+'%';
+  if (pctEl) pctEl.textContent = pct+'%';
+  // builder topbar
+  const barFill = document.querySelector('.builder-topbar .btn-sm + .btn-sm');
+}
+
+// ─ LIVE PREVIEW ─
+function syncPreview() {
+  const v = id => (document.getElementById(id)||{}).value||'';
+  const t = (id,val) => { const el=document.getElementById(id); if(el) el.textContent=val; };
+  t('p-name', v('f-name')||'Your Name');
+  t('p-title', v('f-title')||'Your Title');
+  t('p-email', v('f-email'));
+  t('p-phone', v('f-phone'));
+  t('p-loc', v('f-location'));
+  t('p-li', v('f-linkedin'));
+  t('p-company', v('f-company')||'Company');
+  t('p-dur', v('f-duration'));
+  t('p-role', v('f-role'));
+  t('p-school', v('f-school'));
+  t('p-year', v('f-year'));
+  t('p-degree', v('f-degree'));
+
+  const expRaw = v('f-exp');
+  const lines = expRaw.split('\n').filter(l=>l.trim());
+  const ul = document.getElementById('p-bullets');
+  if (ul) ul.innerHTML = lines.map(l=>`<li>${l.trim()}</li>`).join('') || '<li>Your experience will appear here…</li>';
+
+  const sumRaw = v('f-summary');
+  const sumSec = document.getElementById('a4-summary-sec');
+  const sumEl = document.getElementById('p-summary');
+  if (sumSec && sumEl) {
+    if (sumRaw.trim()) { sumSec.style.display='block'; sumEl.textContent=sumRaw; }
+    else sumSec.style.display='none';
+  }
+}
+
+// ─ SKILLS ─
+function toggleSk(el) {
+  el.classList.toggle('on');
+  const active = [...document.querySelectorAll('.sk-tag.on')].map(t=>t.textContent);
+  const el2 = document.getElementById('p-skills');
+  if (el2) el2.innerHTML = active.map(s=>`<span class="a4-sk">${s}</span>`).join('');
+}
+function addSkill() {
+  const inp = document.getElementById('newSkill');
+  const val = inp.value.trim(); if(!val) return;
+  const tag = document.createElement('div');
+  tag.className='sk-tag on'; tag.textContent=val;
+  tag.onclick=()=>{ tag.classList.toggle('on'); };
+  document.getElementById('skillTags').appendChild(tag);
+  inp.value='';
+}
+
+// ─ AI AUTOPILOT ─
+const strongBullets = [
+  "Spearheaded mutual funds onboarding redesign — grew activation from 41% to 69% in Q3 2022.",
+  "Defined Day-7 investment rate as north star metric, aligning 3 squads around one KPI.",
+  "Launched AI-powered portfolio rebalancing, driving ₹120Cr in incremental AUM in 60 days.",
+  "Reduced P0 incident resolution time by 40% through a structured RCA playbook.",
+  "Grew weekly active investors 18% via cohort-backed nudge campaign — zero additional budget."
+];
+
+function aiRewriteExp() {
+  const strip = document.querySelector('.ai-strip');
+  const label = document.getElementById('aiStripLabel');
+  if (strip) { strip.style.opacity='.6'; strip.style.pointerEvents='none'; }
+  if (label) label.textContent = 'Aria is thinking…';
+
+  const ul = document.getElementById('p-bullets');
+  if (ul) ul.innerHTML=`<div style="display:flex;flex-direction:column;gap:5px;padding:4px 0">${[80,65,50].map(w=>`<div class="shimmer" style="height:9px;width:${w}%"></div>`).join('')}</div>`;
+
+  setTimeout(()=>{
+    const ta = document.getElementById('f-exp');
+    const full = strongBullets.join('\n');
+    ta.value=''; let i=0;
+    const iv = setInterval(()=>{
+      ta.value = full.slice(0,i++);
+      syncPreview();
+      if(i>full.length){
+        clearInterval(iv);
+        if(strip){strip.style.opacity='1';strip.style.pointerEvents='auto';}
+        if(label) label.textContent='Make these bullets land harder.';
+        showToast('Strong bullets added ✦');
+      }
+    },6);
+  },1500);
+}
+
+function aiSummary() {
+  const ta = document.getElementById('f-summary');
+  if(!ta) return;
+  const original = ta.value;
+  ta.value='Aria is writing…';
+  ta.style.opacity='.5';
+  setTimeout(()=>{
+    ta.style.opacity='1';
+    ta.value='';
+    const summary = "Product Manager with 4+ years building consumer fintech at scale. Known for shipping 0→1 features with measurable impact — 3.2M users, ₹120Cr AUM, 28% conversion lift.";
+    let i=0;
+    const iv=setInterval(()=>{
+      ta.value=summary.slice(0,i++);
+      syncPreview();
+      if(i>summary.length){clearInterval(iv);showToast('Summary written ✦');}
+    },8);
+  },1200);
+}
+
+// ─ DOWNLOAD ─
+function fakeDownload() {
+  const prog=document.getElementById('dlProg');
+  const fill=document.getElementById('dlFill');
+  const pct=document.getElementById('dlPct');
+  prog.classList.add('show'); let p=0;
+  const iv=setInterval(()=>{
+    p+=Math.random()*15+3;
+    if(p>=100){p=100;clearInterval(iv);setTimeout(()=>{prog.classList.remove('show');fill.style.width='0';goto('success');},500);}
+    fill.style.width=p+'%';
+    pct.textContent=Math.floor(p)+'%';
+  },100);
+}
+function shareLink(){navigator.clipboard?.writeText('https://gaplytiq.com/r/arjun-kapoor-pm').catch(()=>{});showToast('Link copied ✓');}
+
+// ─ CALL / INTERVIEW ─
+const questions = [
+  "Tell me about a time you had to make a product decision with incomplete data. What was your process, and what was the outcome?",
+  "How do you decide what NOT to build? Walk me through your prioritization framework.",
+  "Describe a time you had a significant disagreement with your engineering lead. How did you resolve it?",
+  "Tell me about a product you shipped that failed. What did you learn?",
+  "What's a product you use daily that you think is poorly designed? What would you fix?"
+];
+let qIdx = 1;
+let callRunning = false;
+let callSeconds = 272;
+let callInterval;
+let muted = false;
+
+function startCallTimer() {
+  if (callRunning) return;
+  callRunning = true;
+  callInterval = setInterval(()=>{
+    callSeconds++;
+    const m = String(Math.floor(callSeconds/60)).padStart(2,'0');
+    const s = String(callSeconds%60).padStart(2,'0');
+    const display = m+':'+s;
+    const el1 = document.getElementById('callTimer');
+    const el2 = document.getElementById('callTimerDisplay');
+    if(el1) el1.textContent=display;
+    if(el2) el2.textContent=display;
+  },1000);
+}
+
+function nextQuestion() {
+  qIdx = (qIdx+1) % questions.length;
+  const qEl = document.getElementById('callQuestion');
+  const qCtr = document.getElementById('qCounter');
+  const qCap = document.querySelector('.cq-label');
+
+  // Simulate AI "thinking"
+  const avatar = document.getElementById('callAvatar');
+  const statusText = document.getElementById('callStatusText');
+  const wave = document.getElementById('callWave');
+
+  statusText.textContent = 'Thinking…';
+  wave.classList.add('idle');
+  avatar.classList.remove('call-avatar-speaking');
+
+  if(qEl) qEl.style.opacity='0';
+
+  setTimeout(()=>{
+    if(qEl){ qEl.textContent=questions[qIdx]; qEl.style.opacity='1'; qEl.style.transition='opacity 300ms'; }
+    if(qCap) qCap.textContent=`Question ${qIdx+1} of ${questions.length}`;
+    if(qCtr) qCtr.textContent=`Question ${qIdx+1} / ${questions.length} · Round 1 of 2`;
+    statusText.textContent='Speaking…';
+    wave.classList.remove('idle');
+    avatar.classList.add('call-avatar-speaking');
+    updateScores();
+    addFeedback();
+  },1200);
+
+  // Answer input clear
+  const ai = document.getElementById('interviewAnswerInput');
+  if(ai) ai.value='';
+}
+
+function submitAnswer(inp) {
+  const val = inp.value.trim();
+  if(!val) return;
+  inp.value='';
+  showToast('Aria is evaluating your answer…');
+  setTimeout(()=>{ nextQuestion(); updateScores(); addFeedback(); }, 1000);
+}
+
+function updateScores() {
+  const scores = [
+    {id:'sc-clarity',vid:'sv-clarity'},
+    {id:'sc-struct',vid:'sv-struct'},
+    {id:'sc-impact',vid:'sv-impact'},
+    {id:'sc-conc',vid:'sv-conc'},
+  ];
+  scores.forEach(({id,vid})=>{
+    const el=document.getElementById(id);
+    const vel=document.getElementById(vid);
+    if(!el||!vel) return;
+    const cur=parseFloat(el.style.width)||70;
+    const next=Math.min(95,Math.max(45,cur+(Math.random()*14-5)));
+    el.style.width=next+'%';
+    vel.textContent=Math.floor(next)+' / 100';
+  });
+}
+
+const feedbackPool = [
+  {text:'Quantified outcome well — 50K users is strong.', cls:'pos'},
+  {text:'Good structure. Add a concrete business metric next time.', cls:'tip'},
+  {text:'Keep it concise. Looks good overall.', cls:''},
+  {text:'Strong point — the STAR format worked well here.', cls:'pos'},
+  {text:'Try making this more impact-focused.', cls:'tip'},
+];
+let fbIdx=3;
+function addFeedback() {
+  const f = feedbackPool[fbIdx%feedbackPool.length]; fbIdx++;
+  const list = document.getElementById('feedbackList');
+  if(!list) return;
+  const el=document.createElement('div');
+  el.className=`fb-item ${f.cls}`;
+  el.textContent=f.text;
+  el.style.opacity='0';el.style.transition='opacity 400ms ease';
+  list.appendChild(el);
+  setTimeout(()=>el.style.opacity='1',50);
+  if(list.children.length>5) list.removeChild(list.firstChild);
+}
+
+function toggleMute() {
+  muted=!muted;
+  const btn=document.getElementById('muteBtn');
+  if(btn){btn.textContent=muted?'🔇':'🎙';btn.classList.toggle('muted',muted);}
+  const wave=document.getElementById('callWave');
+  const statusText=document.getElementById('callStatusText');
+  if(muted){wave.classList.add('idle');statusText.textContent='Muted';}
+  else{wave.classList.remove('idle');statusText.textContent='Speaking…';}
+}
+
+function endCall() {
+  clearInterval(callInterval);
+  callRunning=false;
+  goto('success');
+}
+
+// ─ INIT ─
+goto('landing');
+</script>
+</body>
+</html>
