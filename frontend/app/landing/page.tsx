@@ -26,7 +26,7 @@ export default function LandingPage() {
                 <nav className="land-nav">
                     <div className="logo">Gaply<span>tiq</span></div>
                     <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                        <Link href="/resume-creator" className="btn btn-ghost btn-sm">
+                        <Link href="/login" className="btn btn-ghost btn-sm">
                             Sign in
                         </Link>
                         <button className="tt" onClick={toggleTheme}>
@@ -44,14 +44,15 @@ export default function LandingPage() {
                         From rough ideas to a polished, ATS-ready resume — in minutes, not hours.
                     </p>
                     <div className="land-cta-row">
-                        <Link href="/resume-creator" className="btn btn-primary land-cta">
+                        <Link href="/login" className="btn btn-primary land-cta">
                             Start Building →
                         </Link>
-                        <Link href="/resume-creator" className="btn btn-secondary land-cta">
+                        <Link href="/login" className="btn btn-secondary land-cta">
                             See how it works
                         </Link>
                     </div>
                 </div>
+
 
                 <div className="land-foot label-caps">
                     Trusted by 2,400+ job seekers

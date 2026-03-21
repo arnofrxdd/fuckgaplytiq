@@ -27,8 +27,9 @@ export const calculateDeterministicScore = (data, templatesConfig, activeTemplat
     let sectionCount = 0;
     const warnings = [];
 
-    if (data.summary && data.summary.trim().length > 10) {
-        sections.push(data.summary);
+    const summaryText = typeof data.summary === 'string' ? data.summary : (data.summary?.content || '');
+    if (summaryText && summaryText.trim().length > 10) {
+        sections.push(summaryText);
         sectionCount++;
     }
 

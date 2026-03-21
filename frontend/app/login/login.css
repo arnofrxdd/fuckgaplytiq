@@ -1,0 +1,231 @@
+.login-page {
+  width: 100vw;
+  height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+  font-family: 'Instrument Sans', sans-serif;
+  transition: background var(--ease);
+}
+
+.login-grid {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(var(--border) 1px, transparent 1px),
+                    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 52px 52px;
+  opacity: 0.35;
+  mask-image: radial-gradient(ellipse 90% 80% at 50% 40%, black 10%, transparent 75%);
+  z-index: 0;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 440px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  padding: 48px;
+  z-index: 5;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  animation: fadeUp 0.5s ease-out both;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.l-logo {
+  font-family: 'DM Serif Display', serif;
+  font-size: 24px;
+  margin-bottom: 12px;
+  color: var(--text);
+}
+
+.l-logo span {
+  color: var(--text3);
+}
+
+.l-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 32px;
+  font-weight: 400;
+  color: var(--text);
+  margin-bottom: 8px;
+  letter-spacing: -0.02em;
+}
+
+.l-sub {
+  font-size: 15px;
+  color: var(--text2);
+  line-height: 1.5;
+}
+
+/* Social Buttons */
+.social-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+
+.s-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 500;
+  font-family: 'Instrument Sans', sans-serif;
+  cursor: pointer;
+  transition: var(--ease);
+}
+
+.s-btn:hover {
+  background: var(--bg2);
+  border-color: var(--border2);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.s-btn.google {
+  background: white;
+  border: 1px solid var(--border);
+}
+
+/* Divider */
+.l-divider {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 24px 0;
+  color: var(--text3);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+
+.l-divider::before, .l-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* Form */
+.l-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.f-group label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text3);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.f-input {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 12px 16px;
+  border-radius: var(--r);
+  color: var(--text);
+  font-size: 15px;
+  font-family: 'Instrument Sans', sans-serif;
+  outline: none;
+  transition: var(--ease);
+}
+
+.f-input:focus {
+  border-color: var(--accent);
+  background: var(--surface2);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.btn-login {
+  padding: 12px;
+  background: var(--btn);
+  color: #fff;
+  border: none;
+  border-radius: var(--r);
+  font-size: 15px;
+  font-weight: 600;
+  font-family: 'Instrument Sans', sans-serif;
+  cursor: pointer;
+  transition: var(--ease);
+  margin-top: 4px;
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-login:hover {
+  background: var(--btn-h);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-login:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.l-foot {
+  margin-top: 32px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--text2);
+}
+
+.l-foot a {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.l-foot a:hover {
+  text-decoration: underline;
+}
+
+/* Success State Styles */
+.success-msg {
+  text-align: center;
+  padding: 16px;
+  background: var(--green-bg);
+  border-radius: var(--r);
+  border: 1px solid rgba(45, 122, 79, 0.2);
+}
+
+.success-title {
+  color: var(--green);
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.success-sub {
+  color: var(--text2);
+  font-size: 13.5px;
+}

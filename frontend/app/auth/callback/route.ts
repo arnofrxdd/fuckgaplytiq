@@ -32,11 +32,25 @@ export async function GET(request: Request) {
         )
         const { error } = await supabase.auth.exchangeCodeForSession(code)
         if (!error) {
-            // Force the redirect to the public domain with the /resumy subpath
-            return NextResponse.redirect(`${publicOrigin}/resumy/resume-creator/`)
+            const { data: userData } = await supabase.auth.getUser()
+            let nextPath = '/resumy/dashboard/'
+
+            if (userData.user?.id) {
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('onboarding_status')
+                    .eq('id', userData.user.id)
+                    .single()
+
+                if (profile?.onboarding_status !== 'completed') {
+                    nextPath = '/resumy/onboarding/'
+                }
+            }
+
+            return NextResponse.redirect(`${publicOrigin}${nextPath}`)
         }
     }
 
-    // fallback: return the user to the creator page
-    return NextResponse.redirect(`${publicOrigin}/resumy/resume-creator/`)
+    // fallback: return the user to the dashboard
+    return NextResponse.redirect(`${publicOrigin}/resumy/dashboard/`)
 }

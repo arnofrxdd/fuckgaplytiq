@@ -8,7 +8,12 @@ import { AIConsumptionTracker } from './aiConsumptionTracker'
 // Initialize OpenAI with proper error checking
 // Initialize OpenAI with unification of keys
 const getOpenAIClient = () => {
-    return null as any // OpenAI DISABLED as per user request
+    const key = process.env.OPENAI_API_KEY || process.env.ATS_BUILDER_OPENAI_API_KEY || process.env.ARIA_API_KEY;
+    if (!key || key === 'undefined') return null;
+    console.log('✅ Initializing OpenAI Client');
+    return new OpenAI({
+        apiKey: key,
+    });
 }
 
 const getGroqClient = () => {
@@ -62,9 +67,9 @@ function calculateDeterministicExternalScore(text: string): number {
     return 50 + (hash % 21); // Range 50-70
 }
 
-// Helper to get client (prefers Mistral -> Groq -> OpenAI)
+// Helper to get client (prefers OpenAI -> Mistral -> Groq)
 const getResumeAIClient = () => {
-    return mistral || groq || openai
+    return openai || mistral || groq
 }
 
 /**
@@ -82,8 +87,8 @@ export async function generateVariants(type: string, input: any, user?: { id?: s
         return [];
     }
 
-    const model = process.env.GROQ_MODEL || 'llama-3.1-8b-instant';
-    const provider = groq ? 'groq' : (mistral ? 'mistral' : 'openai');
+    const model = openai ? 'gpt-4o-mini' : (mistral ? 'mistral-large-2411' : 'llama-3.1-8b-instant');
+    const provider = openai ? 'openai' : (mistral ? 'mistral' : 'groq');
 
     let system = "You are a professional resume writer.";
     let userPrompt = "";
@@ -286,8 +291,11 @@ Be thorough and extract ALL content present in the resume, but keep its quality 
 
     // Use predefined fallback chains for providers
     const aiClient = getResumeAIClient()
-    const model = process.env.MISTRAL_API_KEY ? 'mistral-large-2411' : (process.env.GROQ_MODEL || process.env.OPENAI_RESUME_MODEL || process.env.OPENAI_MODEL || 'mistral-large-2411')
-    console.log(`📡 Sending resume text to AI (Provider: ${mistral ? 'Mistral' : groq ? 'Groq' : 'OpenAI'}, Model: ${model}, Length: ${text.length} chars)...`);
+    if (!aiClient) {
+        throw new Error("No AI provider keys configured. Please add an OpenAI, Mistral, or Groq API key.");
+    }
+    const model = openai ? 'gpt-4o-mini' : (mistral ? 'mistral-large-2411' : 'llama-3.1-8b-instant')
+    console.log(`📡 Sending resume text to AI (Provider: ${openai ? 'OpenAI' : mistral ? 'Mistral' : 'Groq'}, Model: ${model}, Length: ${text.length} chars)...`);
     console.log('📄 RESUME CONTENT SNIPPET:', text.substring(0, 500) + (text.length > 500 ? '...' : ''));
 
     let resp: any;

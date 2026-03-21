@@ -1,0 +1,315 @@
+'use client';
+
+import React, { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
+import { supabaseClient } from '@/lib/supabaseClient';
+import { useAuth } from '@/lib/authContext';
+import ReactMarkdown from 'react-markdown';
+import './onboarding.css';
+
+interface ProfilePreview {
+  name: string;
+  jobTitle: string;
+  experienceLevel: string;
+}
+
+export default function OnboardingPage() {
+  const router = useRouter();
+  const { userId, userEmail, isAuthenticated, isLoading } = useAuth();
+  
+  const [messages, setMessages] = useState<any[]>([]);
+  const [inputText, setInputText] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const [activeChoices, setActiveChoices] = useState<string[]>([]);
+  const [showChat, setShowChat] = useState(false);
+  const [step, setStep] = useState(0); // For progress bar
+  
+  const [profilePreview, setProfilePreview] = useState<ProfilePreview>({
+    name: '',
+    jobTitle: '',
+    experienceLevel: ''
+  });
+
+  // 0. Auth Guard
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push('/login');
+    }
+  }, [isLoading, isAuthenticated, router]);
+
+  // 1. Initial Greeting - Dynamic AI Start
+  useEffect(() => {
+    if (!isAuthenticated || messages.length > 0 || isTyping) return;
+    
+    const initialName = userEmail?.split('@')[0] || '';
+    
+    // Trigger the actual AI to start by sending a hidden system message
+    sendCommand(`[System: New user session started. Greet them warmly and confirm if their name is "${initialName}" based on their email context.]`);
+  }, [isAuthenticated, userEmail, messages.length, isTyping]);
+
+  // 2. Handle Commands
+  const sendCommand = async (text: string) => {
+    if (!text.trim() || isTyping) return;
+    
+    const userMsg = { role: 'user', text };
+    setMessages(prev => [...prev, userMsg]);
+    setInputText('');
+    setIsTyping(true);
+
+    try {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      const token = session?.access_token;
+      
+      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      const response = await fetch(`${backendUrl}/api/aria/command`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          message: text,
+          context: { 
+            currentRoute: '/onboarding',
+            profile: profilePreview,
+            email: userEmail
+          },
+          history: messages,
+          stream: true // REQUEST STREAMING
+        })
+      });
+
+      if (!response.ok) throw new Error("Aria responded with an error.");
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      if (!reader) throw new Error("No reader available");
+
+      let done = false;
+      let currentAssistantText = "";
+      let finalData: any = null;
+
+      // Add a placeholder assistant message that we will stream into
+      setMessages(prev => [...prev, { role: 'assistant', text: "" }]);
+      setIsTyping(false); // Stop the "Aria is writing..." indicator
+
+      let buffer = "";
+
+      while (!done) {
+        const { value, done: readerDone } = await reader.read();
+        done = readerDone;
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || ""; 
+        
+        for (const line of lines) {
+          const trimmedLine = line.trim();
+          if (trimmedLine.startsWith('data: ')) {
+            const dataStr = trimmedLine.replace('data: ', '').trim();
+            if (dataStr === '[DONE]') continue;
+
+            try {
+              const data = JSON.parse(dataStr);
+
+              if (data.type === 'text_chunk') {
+                currentAssistantText += data.content;
+                setMessages(prev => {
+                  const next = [...prev];
+                  if (next.length > 0) {
+                    next[next.length - 1] = { 
+                      ...next[next.length - 1], 
+                      text: currentAssistantText 
+                    };
+                  }
+                  return next;
+                });
+              } else if (data.type === 'widget_chunk') {
+                console.log("[Aria Onboarding] Live widget chunk:", data);
+                if (data.choices) setActiveChoices(data.choices);
+              } else {
+                finalData = data;
+              }
+            } catch (e) {
+              // skip partials
+            }
+          }
+        }
+      }
+
+      console.log("[Aria Onboarding Debug] Final data from stream:", finalData);
+      if (!finalData) return;
+
+      const data = finalData;
+
+      if (data.type === 'tool_call') {
+        const payload = data.args || {};
+        
+        // Live UI Updates - Synced with new Brain tool 'update_profile'
+        if (data.tool === 'update_profile' || data.tool === 'update_onboarding_ui' || data.tool === 'show_widget') {
+          setProfilePreview(prev => ({
+            ...prev,
+            name: payload.name || prev.name,
+            jobTitle: payload.jobTitle || prev.jobTitle,
+            experienceLevel: payload.experienceLevel || prev.experienceLevel
+          }));
+          
+          
+          // Strict AI control over chatbox
+          if (payload.showChatbox !== undefined) {
+             setShowChat(!!payload.showChatbox);
+          } else {
+             // Fallback: hide if buttons present
+             setShowChat(activeChoices.length === 0);
+          }
+
+          if (data.choices) {
+             setActiveChoices(data.choices);
+          } else if (payload.choices) {
+             setActiveChoices(payload.choices);
+          } else if (payload.showChatbox === false) {
+             // If tool explicitly said hide chatbox but provided no choices, respect it
+          }
+          if (data.tool !== 'show_widget') {
+            setStep(prev => prev + 1);
+          }
+        }
+
+        // Final Redirect
+        if (data.tool === 'finish_onboarding') {
+          setMessages(prev => {
+            const next = [...prev];
+            next[next.length - 1] = { role: 'assistant', text: data.content };
+            return next;
+          });
+          setTimeout(() => router.push('/dashboard'), 2000);
+          return;
+        }
+
+        setMessages(prev => {
+          const next = [...prev];
+          next[next.length - 1] = { role: 'assistant', text: data.content };
+          return next;
+        });
+        
+      } else {
+        setMessages(prev => {
+          const next = [...prev];
+          next[next.length - 1] = { role: 'assistant', text: data.content };
+          return next;
+        });
+        setActiveChoices([]);
+        setShowChat(false);
+      }
+
+    } catch (err) {
+      console.error("Onboarding Command Error:", err);
+      setIsTyping(false);
+    }
+  };
+
+  const currentAriaText = messages.filter(m => m.role === 'assistant').slice(-1)[0]?.text || "";
+
+  return (
+    <div className="onboarding-page">
+      <div className="ob-grid" />
+      
+      {/* 1. Header (Standalone) */}
+      <header className="ob-header">
+        <div className="ob-logo">Gaply<span>tiq</span></div>
+        <button 
+          className="btn btn-ghost btn-sm" 
+          onClick={() => router.push('/login')}
+          style={{ opacity: 0.6, fontSize: '13px', fontWeight: 600 }}
+        >
+          Sign Out
+        </button>
+      </header>
+ 
+      <main className="ob-content">
+        <section className="ob-left">
+          <div className="aria-presence">
+            <motion.div 
+              className="aria-orb"
+              animate={{ 
+                scale: isTyping ? [1, 1.04, 1] : 1,
+              }}
+              transition={{ repeat: Infinity, duration: 2.5 }}
+            >
+              ✦
+            </motion.div>
+          </div>
+
+          <AnimatePresence mode="popLayout">
+            <motion.div 
+              key={currentAriaText}
+              className="aria-bubble"
+              initial={{ opacity: 0, scale: 0.98, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 1.02, y: -10 }}
+              transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
+            >
+              {isTyping && !currentAriaText ? (
+                <span style={{ opacity: 0.3, fontStyle: 'italic', fontSize: '20px' }}>Aria is thinking...</span>
+              ) : (
+                <ReactMarkdown>{currentAriaText}</ReactMarkdown>
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </section>
+
+        <section className="ob-right">
+          <div className="ob-interaction">
+            {/* MAJOR BUTTONS */}
+            {!isTyping && activeChoices.length > 0 && (
+              <div className="ob-choices">
+                {activeChoices.map((choice, i) => (
+                  <button 
+                    key={i} 
+                    className="major-btn"
+                    onClick={() => sendCommand(choice)}
+                  >
+                    {choice}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* CHATBOX */}
+            {!isTyping && (showChat || (activeChoices.length === 0 && messages.length > 1)) && (
+              <div className="ob-input-container">
+                <input 
+                  className="ob-input"
+                  placeholder="Type your response..."
+                  value={inputText}
+                  onChange={(e) => setInputText(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && sendCommand(inputText)}
+                  disabled={isTyping}
+                  autoFocus
+                />
+                <button 
+                  className="btn btn-primary" 
+                  onClick={() => sendCommand(inputText)}
+                  disabled={isTyping}
+                  style={{ padding: '0 24px', height: '44px' }}
+                >
+                  Send ↗
+                </button>
+              </div>
+            )}
+          </div>
+        </section>
+
+        <div className="ob-progress-wrap">
+           <div style={{ display: 'flex', gap: '8px' }}>
+              {[0, 1, 2, 3].map(i => (
+                <div key={i} className={`dot ${i <= step ? 'active' : ''}`} />
+              ))}
+           </div>
+        </div>
+      </main>
+    </div>
+  );
+}

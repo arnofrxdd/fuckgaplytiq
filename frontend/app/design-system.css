@@ -1,0 +1,67 @@
+/* ════════════════════════════════════════
+   GAPLYTIQ GLOBAL DESIGN SYSTEM
+════════════════════════════════════════ */
+
+:root {
+  --bg:#f4f3ef;--bg2:#eceae4;--bg3:#e2e0d8;
+  --surface:#ffffff;--surface2:#f8f7f4;
+  --border:#d6d4cc;--border2:#c4c1b8;
+  --text:#18170f;--text2:#56544a;--text3:#8a8778;
+  --accent:#3d5a80;--accent-light:#eef2f7;--accent-glow:rgba(61,90,128,0.14);
+  --btn:#1e2d40;--btn-h:#111c28;
+  --green:#2d7a4f;--green-bg:#edf7f2;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 16px rgba(0,0,0,.09),0 2px 4px rgba(0,0,0,.04);
+  --shadow-lg:0 16px 48px rgba(0,0,0,.12),0 4px 8px rgba(0,0,0,.06);
+  --r:6px;--r-lg:10px;--r-xl:16px;
+  --ease:200ms cubic-bezier(.4,0,.2,1);
+}
+
+[data-theme="dark"]{
+  --bg:#0e0e0c;--bg2:#131311;--bg3:#1a1a17;
+  --surface:#1c1c19;--surface2:#222220;
+  --border:#2c2c28;--border2:#3a3a35;
+  --text:#efece3;--text2:#9e9b90;--text3:#68665c;
+  --accent:#7fa3c8;--accent-light:#1a2535;--accent-glow:rgba(127,163,200,.12);
+  --btn:#7fa3c8;--btn-h:#a0bfd8;
+  --green:#4ade80;--green-bg:#052e16;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.35);
+  --shadow-md:0 4px 16px rgba(0,0,0,.4);
+  --shadow-lg:0 16px 48px rgba(0,0,0,.5);
+}
+
+/* Base Utility Classes */
+.serif { font-family: 'DM Serif Display', serif; }
+.label-caps { font-size: 10.5px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--text3); }
+
+/* Standard Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border-radius: var(--r);
+  border: none;
+  cursor: pointer;
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 13.5px;
+  font-weight: 500;
+  transition: var(--ease);
+  position: relative;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.btn-primary { background: var(--btn); color: #fff; box-shadow: var(--shadow-sm); }
+.btn-primary:hover { background: var(--btn-h); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+
+.btn-secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); box-shadow: var(--shadow-sm); }
+.btn-secondary:hover { background: var(--bg2); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+
+.btn-ghost { background: transparent; color: var(--text2); padding: 8px 12px; }
+.btn-ghost:hover { background: var(--bg2); color: var(--text); }
+.btn-sm { padding: 6px 12px; font-size: 12.5px; }
+
+/* Scrollbar Hide */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }

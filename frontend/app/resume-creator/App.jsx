@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import Onboarding from "./components/OnboardingRedesign"; // Using the new professional design
-import FormPanel from "./components/FormPanel";   // Make sure this file exists in components
+import FormPanel from "./components/FormPanelV2";   // Using the new V2 design with Gaplytiq aesthetics
 import { useAnalytics } from "@/lib/analytics";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 

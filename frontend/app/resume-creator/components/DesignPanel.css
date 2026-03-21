@@ -47,7 +47,7 @@
     -webkit-appearance: none;
     appearance: none;
     margin-top: -6px; /* (Track height / 2) - (Thumb height / 2) = (6/2) - (18/2) = -6 */
-    border: 3px solid var(--slider-theme-color, #7c3aed);
+    border: 3px solid var(--slider-theme-color, var(--accent));
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
@@ -67,7 +67,7 @@
     position: absolute;
     left: 0;
     height: 6px;
-    background: var(--slider-theme-color, #7c3aed);
+    background: var(--slider-theme-color, var(--accent));
     border-radius: 10px;
     z-index: 1;
     pointer-events: none;
@@ -86,12 +86,12 @@
     width: 14px;
     border-radius: 50%;
     background: #ffffff;
-    border: 3px solid var(--slider-theme-color, #7c3aed);
+    border: 3px solid var(--slider-theme-color, var(--accent));
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 .luxury-range-input::-moz-range-progress {
-    background: var(--slider-theme-color, #7c3aed);
+    background: var(--slider-theme-color, var(--accent));
     height: 6px;
     border-radius: 10px;
 }

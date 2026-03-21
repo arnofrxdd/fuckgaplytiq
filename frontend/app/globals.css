@@ -44,6 +44,12 @@
     @apply font-bold tracking-tight text-[#0f172a];
     font-family: var(--font-heading), sans-serif;
   }
+
+  /* Remove ugly default browser focus outlines and Tailwind rings */
+  :focus {
+    outline: none !important;
+    box-shadow: none !important;
+  }
 }
 
 .font-serif {

@@ -1,6 +1,9 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import './design-system.css'
 import { AuthProvider } from '@/lib/authContext'
+import { AriaProvider } from '@/lib/AriaContext'
+
 import { AnalyticsProvider } from '@/lib/analytics'
 import { 
     Plus_Jakarta_Sans, 
@@ -31,8 +34,9 @@ import {
     Cormorant_Garamond,
     Spectral,
     Crimson_Pro,
-    Josefin_Sans,
-    Cinzel
+    Josefin_Sans, 
+    Cinzel,
+    DM_Serif_Display
 } from 'next/font/google'
 
 const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], variable: '--font-jakarta', display: 'swap' })
@@ -65,6 +69,7 @@ const spectral = Spectral({ weight: ['200', '300', '400', '500', '600', '700'], 
 const crimson = Crimson_Pro({ weight: ['200', '300', '400', '500', '600', '700'], subsets: ['latin'], variable: '--font-crimson', display: 'swap' })
 const josefin = Josefin_Sans({ subsets: ['latin'], variable: '--font-josefin', display: 'swap' })
 const cinzel = Cinzel({ subsets: ['latin'], variable: '--font-cinzel', display: 'swap' })
+const dmSerif = DM_Serif_Display({ weight: ['400'], subsets: ['latin'], style: ['normal', 'italic'], variable: '--font-dm-serif', display: 'swap' })
 
 export const metadata: Metadata = {
     title: 'Resume Builder',
@@ -89,16 +94,18 @@ export default function RootLayout({
         openSans.variable, roboto.variable, lato.variable,
         sourceSans.variable, merriweather.variable, ebGaramond.variable,
         libreBaskerville.variable, cormorant.variable, spectral.variable,
-        crimson.variable, josefin.variable, cinzel.variable
+        crimson.variable, josefin.variable, cinzel.variable, dmSerif.variable
     ].join(' ')
 
     return (
         <html lang="en" className={fontVariables}>
             <body className="min-h-screen flex flex-col bg-white text-slate-900 antialiased font-sans">
                 <AuthProvider>
-                    <AnalyticsProvider>
-                        <div className="flex-1">{children}</div>
-                    </AnalyticsProvider>
+                    <AriaProvider>
+                        <AnalyticsProvider>
+                            <div className="flex-1">{children}</div>
+                        </AnalyticsProvider>
+                    </AriaProvider>
                 </AuthProvider>
             </body>
         </html>

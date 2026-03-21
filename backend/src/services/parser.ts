@@ -229,11 +229,16 @@ function normalizeToSchema(aiParsed: any, rawText: string) {
         issuer: str(a.issuer ?? a.organization)
     })).filter((a: any) => a.name);
 
-    // ─── 22. References — stored as a plain string ────────────────────────────────
-    const referencesRaw = aiParsed?.references;
-    const references = (typeof referencesRaw === 'string' && str(referencesRaw))
-        ? str(referencesRaw)
-        : 'Available upon request';
+    // ─── 22. References — stored as an array of objects ──────────────────────────
+    const referencesRaw = safeArr(aiParsed?.references);
+    let references = referencesRaw.map((r: any) => ({
+        name: typeof r === 'string' ? str(r) : str(r?.name ?? r?.fullName),
+        description: str(r?.description ?? r?.details ?? r?.contactInfo)
+    })).filter((r: any) => r.name);
+
+    if (references.length === 0) {
+        references = [{ name: 'Available upon request', description: '' }];
+    }
 
     // ─── 23. Custom Section (schema: customSection.{title, content, isVisible}) ──
     const csRaw = aiParsed?.customSection || aiParsed?.custom_section || {};
@@ -420,7 +425,7 @@ export async function extractStructuredResume(text: string, meta?: any, user?: {
             accomplishments: [],
             volunteering: [],
             publications: [],
-            references: 'Available upon request',
+            references: [{ name: 'Available upon request', description: '' }],
             affiliations: [],
             websites: [],
             additionalInfo: '',

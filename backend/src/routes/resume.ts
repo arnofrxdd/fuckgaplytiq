@@ -287,6 +287,20 @@ router.post('/upload', authGuard, rateLimit(50, 60 * 60 * 1000), imageCompressMi
                             console.log(`🧠 Starting immediate AI parse for resume ${resumeId}...`);
                             const userContext = (req as any).user ? { id: (req as any).user.id, email: (req as any).user.email } : (userId ? { id: userId } : undefined);
                             const { parsed, confidence, isFallback } = await extractStructuredResume(text, out.meta, userContext)
+                            
+                            // Sanitizer: Remove null bytes (\u0000) which crash PostgreSQL
+                            const sanitizeForPostgres = (obj: any): any => {
+                                if (typeof obj === 'string') return obj.replace(/\u0000/g, '');
+                                if (Array.isArray(obj)) return obj.map(sanitizeForPostgres);
+                                if (obj !== null && typeof obj === 'object') {
+                                    return Object.fromEntries(Object.entries(obj).map(([k, v]) => [k, sanitizeForPostgres(v)]));
+                                }
+                                return obj;
+                            };
+
+                            const safeText = text.replace(/\u0000/g, '');
+                            const safeParsed = sanitizeForPostgres(parsed);
+
                             if (isFallback) {
                                 console.warn(`⚠️ [AI PARSE] Fallback mode used for ${resumeId} due to parsing failure.`);
                             } else {
@@ -296,8 +310,8 @@ router.post('/upload', authGuard, rateLimit(50, 60 * 60 * 1000), imageCompressMi
                             // Update resume with parsed data AND set status to completed
                             const { error: updateError } = await supabase.from('resumes')
                                 .update({
-                                    parsed_text: text,
-                                    parsed_json: parsed,
+                                    parsed_text: safeText,
+                                    parsed_json: safeParsed,
                                     status: 'completed',
                                     completed_at: new Date(),
                                     updated_at: new Date()
@@ -305,17 +319,36 @@ router.post('/upload', authGuard, rateLimit(50, 60 * 60 * 1000), imageCompressMi
                                 .eq('id', resumeId)
 
                             if (updateError) {
-                                console.error('❌ Failed to save parsed data to Supabase:', updateError);
-                                await supabase.from('ai_jobs').update({ status: 'failed', last_error: { message: 'Failed to update resume table' } }).eq('id', jobId)
+                                console.error('❌ Failed to save parsed data to Supabase (resumes):', updateError);
+                                await supabase.from('ai_jobs').update({ status: 'failed', last_error: { message: 'Failed to update resumes table' } }).eq('id', jobId)
                             } else {
                                 console.log(`💾 Resume ${resumeId} updated with parsed JSON.`);
+                                
+                                // NEW: Update the associated builder_resumes draft if provided
+                                const builderId = req.body.builder_id;
+                                const preSelectedName = req.body.pre_selected_name;
+                                const preSelectedTemplate = req.body.pre_selected_template;
 
-                                // NEW: Sync this to Universal Career DNA
-                                try {
-                                    // We'll sync by default for now if it's a successful parse
-                                    await careerDnaService.syncFromResume(userId, resumeId, parsed);
-                                } catch (dnaErr) {
-                                    console.warn('⚠️ Career DNA sync failed (non-fatal):', dnaErr);
+                                if (builderId) {
+                                    console.log(`🔄 Syncing AI result to builder draft: ${builderId}`);
+                                    
+                                    // Fallback to name extraction if user didn't pre-provide one
+                                    let finalTitle = preSelectedName && preSelectedName !== 'Untitled Resume' 
+                                        ? preSelectedName 
+                                        : (safeParsed.personal?.name ? `${safeParsed.personal.name}'s Resume` : "My Imported Resume");
+
+                                    let updatePayload: any = {
+                                        data: safeParsed,
+                                        title: finalTitle,
+                                        onboarding_metadata: { status: 'completed' },
+                                        updated_at: new Date()
+                                    };
+
+                                    if (preSelectedTemplate && preSelectedTemplate !== 'null') {
+                                        updatePayload.template_id = preSelectedTemplate;
+                                    }
+
+                                    await supabase.from('builder_resumes').update(updatePayload).eq('id', builderId);
                                 }
 
                                 // Mark job as done
